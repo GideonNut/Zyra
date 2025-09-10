@@ -1,0 +1,32 @@
+[
+  {
+    "title": "gideon",
+    "description": "Payment via mobile money - shoppa_1757478600128_o2g78c9n2",
+    "amount": "10",
+    "currency": "GHS",
+    "paymentMethod": "mobile_money",
+    "reference": "shoppa_1757478600128_o2g78c9n2",
+    "customer": {
+      "id": 304891176,
+      "first_name": null,
+      "last_name": null,
+      "email": "+233249614989@mobilemoney.gh",
+      "customer_code": "CUS_gz4l9ghkfmxbeh4",
+      "phone": null,
+      "metadata": null,
+      "risk_action": "default",
+      "international_format_phone": null
+    },
+    "paid_at": "2025-09-10T04:34:58.000Z",
+    "metadata": {
+      "paystack_reference": "shoppa_1757478600128_o2g78c9n2",
+      "paystack_transaction_id": 5322343992,
+      "customer_name": "gideon",
+      "phone_number": "+233249614989",
+      "original_amount": 10,
+      "original_currency": "GHS"
+    },
+    "id": "mobile_money_1757478900766_ssakbf9bf",
+    "createdAt": "2025-09-10T04:35:00.766Z"
+  }
+]
