@@ -9,7 +9,12 @@ export interface MobileMoneyInvoice {
   currency: string;
   paymentMethod: 'mobile_money';
   reference: string;
-  customer: any;
+  customer: {
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+  };
   paid_at: string;
   createdAt: string;
   metadata: {
@@ -40,7 +45,7 @@ export async function getAllInvoices(): Promise<MobileMoneyInvoice[]> {
     await ensureDataDirectory();
     const data = await fs.readFile(INVOICES_FILE, 'utf-8');
     return JSON.parse(data);
-  } catch (error) {
+  } catch {
     // File doesn't exist or is empty, return empty array
     return [];
   }

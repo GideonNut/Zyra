@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FileText, Wallet, Plus, User, Check, Clock } from "lucide-react";
+import { FileText, Plus, Check, Clock } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 interface PaymentLink {
@@ -62,7 +62,12 @@ interface MobileMoneyInvoice {
   currency: string;
   paymentMethod: 'mobile_money';
   reference: string;
-  customer: any;
+  customer: {
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+  };
   paid_at: string;
   createdAt: string;
   metadata: {
@@ -87,7 +92,7 @@ export default function Home() {
     if (account?.address) {
       fetchData();
     }
-  }, [account?.address]);
+  }, [account?.address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchData = async () => {
     try {

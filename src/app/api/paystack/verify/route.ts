@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
           description: data.data.metadata?.description || `Payment via mobile money - ${data.data.reference}`,
           amount: data.data.amount.toString(),
           currency: data.data.currency,
-          paymentMethod: 'mobile_money',
+          paymentMethod: 'mobile_money' as const,
           reference: data.data.reference,
           customer: data.data.customer,
           paid_at: data.data.paid_at,

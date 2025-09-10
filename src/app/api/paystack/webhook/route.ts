@@ -4,7 +4,7 @@ import { saveInvoice } from '@/lib/invoice-storage';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    const signature = request.headers.get('x-paystack-signature');
+    // const signature = request.headers.get('x-paystack-signature');
     
     // In production, you should verify the webhook signature
     // For now, we'll process the webhook without verification

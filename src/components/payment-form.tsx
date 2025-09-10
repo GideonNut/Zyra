@@ -21,6 +21,25 @@ import { TokenSelector } from "@/components/ui/token-selector";
 import { SingleNetworkSelector } from "@/components/ui/network-selector";
 import { client } from "@/lib/constants";
 
+// Extend Window interface for Paystack
+declare global {
+  interface Window {
+    PaystackPop: {
+      setup: (options: {
+        key: string;
+        email: string;
+        amount: number;
+        currency: string;
+        ref: string;
+        callback: () => void;
+        onClose: () => void;
+      }) => {
+        openIframe: () => void;
+      };
+    };
+  }
+}
+
 const formSchema = z.object({
   customerName: z.string().min(1, "Customer Name is required").max(100, "Customer Name must be less than 100 characters"),
   phoneNumber: z.string().optional(),
@@ -140,14 +159,14 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
         const data = await response.json();
         
         // Initialize Paystack payment
-        if (typeof window !== 'undefined' && (window as any).PaystackPop) {
-          const paystack = (window as any).PaystackPop.setup({
-            key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+        if (typeof window !== 'undefined' && window.PaystackPop) {
+          const paystack = window.PaystackPop.setup({
+            key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
             email: data.email,
             amount: data.amount,
             currency: data.currency,
             ref: data.reference,
-            callback: function(response: any) {
+            callback: function() {
               // Verify payment
               verifyPayment(data.reference);
             },
