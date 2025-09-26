@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Shoppa",
+  title: "Zyra",
   description: "Generate instant invoices with QR codes for fast payments",
 };
 

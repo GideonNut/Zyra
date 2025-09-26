@@ -1,4 +1,4 @@
-# Shoppa
+# Zyra
 
 See the live app at https://instant-invoice-eight.vercel.app/
 
@@ -6,7 +6,7 @@ Create professional invoices that accept both crypto and mobile money payments w
 
 ## What it does
 
-Shoppa is a comprehensive invoice management platform that supports multiple payment methods:
+Zyra is a comprehensive invoice management platform that supports multiple payment methods:
 
 - **Crypto Payments**: Accept payments in various cryptocurrencies across multiple chains
 - **Mobile Money**: Accept mobile money payments through Paystack integration

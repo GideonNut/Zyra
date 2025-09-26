@@ -200,7 +200,7 @@ export default function Home() {
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center gap-2">
               <FileText className="size-6" />
-              <h1 className="text-xl font-bold">Shoppa</h1>
+              <h1 className="text-xl font-bold">Zyra</h1>
             </div>
           </div>
         </header>
@@ -210,7 +210,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Shoppa for Ghana.
+                Zyra for Ghana.
                 <br />
                 Get Paid Instantly.
               </h1>
@@ -310,7 +310,7 @@ export default function Home() {
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-2">
               <FileText className="size-6" />
-              <h1 className="text-xl font-bold">Shoppa</h1>
+              <h1 className="text-xl font-bold">Zyra</h1>
             </div>
           </div>
         </header>

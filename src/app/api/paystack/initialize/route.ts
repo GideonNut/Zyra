@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const amountInKobo = Math.round(parseFloat(amount) * (currency === 'GHS' ? 100 : 100));
 
     // Generate a unique reference
-    const reference = `shoppa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const reference = `zyra_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Initialize Paystack payment
     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
