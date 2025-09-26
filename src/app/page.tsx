@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { FileText, Plus, Check, Clock } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface PaymentLink {
   id: string;
@@ -198,9 +199,12 @@ export default function Home() {
         {/* Header */}
         <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
           <div className="container mx-auto px-6 py-4">
-            <div className="flex items-center gap-2">
-              <FileText className="size-6" />
-              <h1 className="text-xl font-bold">Zyra</h1>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="size-6" />
+                <h1 className="text-xl font-bold">Zyra</h1>
+              </div>
+              <ThemeToggle />
             </div>
           </div>
         </header>
@@ -312,6 +316,7 @@ export default function Home() {
               <FileText className="size-6" />
               <h1 className="text-xl font-bold">Zyra</h1>
             </div>
+            <ThemeToggle />
           </div>
         </header>
         <main className="p-8">
@@ -395,9 +400,10 @@ export default function Home() {
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <FileText className="size-6" />
-            <h1 className="text-xl font-bold">Shoppa</h1>
+            <h1 className="text-xl font-bold">Zyra</h1>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
                 <Button size="sm">
