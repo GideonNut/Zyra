@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useConnect, useActiveWallet } from "thirdweb/react";
 import { createWallet, injectedProvider, WalletId } from "thirdweb/wallets";
+import { inAppWallet } from "thirdweb/wallets";
 import { cn } from "@/lib/utils";
 import { client } from "@/lib/constants";
 
@@ -13,6 +14,7 @@ interface ConnectButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
   title?: string;
+  isEmailSignIn?: boolean;
 }
 
 export function ConnectButton({
@@ -22,6 +24,7 @@ export function ConnectButton({
   variant = "default",
   size = "default",
   title,
+  isEmailSignIn = false,
   ...props
 }: ConnectButtonProps) {
   const { connect, isConnecting } = useConnect();
@@ -29,26 +32,37 @@ export function ConnectButton({
 
   const handleConnect = () => {
     connect(async () => {
-      const wallet = createWallet(id as WalletId);
-
-      // if user has wallet installed, connect to it
-      if (injectedProvider(id as WalletId)) {
-        await wallet.connect({ client });
-      }
-      // open WalletConnect modal so user can scan the QR code and connect
-      else {
+      if (isEmailSignIn) {
+        // Create in-app wallet with email authentication
+        const wallet = inAppWallet();
         await wallet.connect({
           client,
-          walletConnect: { showQrModal: true },
+          strategy: "email",
         });
-      }
+        return wallet;
+      } else {
+        // Standard wallet connection
+        const wallet = createWallet(id as WalletId);
 
-      // return the wallet to set it as active wallet
-      return wallet;
+        // if user has wallet installed, connect to it
+        if (injectedProvider(id as WalletId)) {
+          await wallet.connect({ client });
+        }
+        // open WalletConnect modal so user can scan the QR code and connect
+        else {
+          await wallet.connect({
+            client,
+            walletConnect: { showQrModal: true },
+          });
+        }
+
+        // return the wallet to set it as active wallet
+        return wallet;
+      }
     });
   };
 
-  const isConnected = activeWallet?.id === id;
+  const isConnected = isEmailSignIn ? activeWallet?.id === "inApp" : activeWallet?.id === id;
 
   return (
     <Button
