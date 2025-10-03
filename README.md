@@ -1,6 +1,6 @@
 # Zyra
 
-See the live app at https://instant-invoice-eight.vercel.app/
+See the live app at https://myzyra.vercel.app/
 
 Create professional invoices that accept both crypto and mobile money payments with instant tracking and management.
 
