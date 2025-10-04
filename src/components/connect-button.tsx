@@ -3,9 +3,10 @@
 import { Button } from "@/components/ui/button";
 import { useConnect, useActiveWallet } from "thirdweb/react";
 import { createWallet, injectedProvider, WalletId } from "thirdweb/wallets";
-import { inAppWallet } from "thirdweb/wallets";
+import { inAppWallet, preAuthenticate } from "thirdweb/wallets";
 import { cn } from "@/lib/utils";
 import { client } from "@/lib/constants";
+import { useState } from "react";
 
 interface ConnectButtonProps {
   id: string;
@@ -29,40 +30,139 @@ export function ConnectButton({
 }: ConnectButtonProps) {
   const { connect, isConnecting } = useConnect();
   const activeWallet = useActiveWallet();
+  const [email, setEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
 
   const handleConnect = () => {
+    if (isEmailSignIn) {
+      setShowEmailForm(true);
+      return;
+    }
+
     connect(async () => {
-      if (isEmailSignIn) {
-        // Create in-app wallet with email authentication
-        const wallet = inAppWallet();
+      // Standard wallet connection
+      const wallet = createWallet(id as WalletId);
+
+      // if user has wallet installed, connect to it
+      if (injectedProvider(id as WalletId)) {
+        await wallet.connect({ client });
+      }
+      // open WalletConnect modal so user can scan the QR code and connect
+      else {
         await wallet.connect({
           client,
-          strategy: "email",
+          walletConnect: { showQrModal: true },
         });
-        return wallet;
-      } else {
-        // Standard wallet connection
-        const wallet = createWallet(id as WalletId);
-
-        // if user has wallet installed, connect to it
-        if (injectedProvider(id as WalletId)) {
-          await wallet.connect({ client });
-        }
-        // open WalletConnect modal so user can scan the QR code and connect
-        else {
-          await wallet.connect({
-            client,
-            walletConnect: { showQrModal: true },
-          });
-        }
-
-        // return the wallet to set it as active wallet
-        return wallet;
       }
+
+      // return the wallet to set it as active wallet
+      return wallet;
+    });
+  };
+
+  const handleSendCode = async () => {
+    if (!email) return;
+    
+    try {
+      await preAuthenticate({
+        client,
+        strategy: "email",
+        email,
+      });
+      setCodeSent(true);
+    } catch (error) {
+      console.error("Failed to send verification code:", error);
+    }
+  };
+
+  const handleEmailSignIn = async () => {
+    if (!email || !verificationCode) return;
+
+    connect(async () => {
+      const wallet = inAppWallet();
+      await wallet.connect({
+        client,
+        strategy: "email",
+        email,
+        verificationCode,
+      });
+      return wallet;
     });
   };
 
   const isConnected = isEmailSignIn ? activeWallet?.id === "inApp" : activeWallet?.id === id;
+
+  if (showEmailForm) {
+    return (
+      <div className="space-y-2">
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full px-3 py-2 border border-border rounded-md"
+          disabled={codeSent}
+        />
+        {!codeSent ? (
+          <Button
+            onClick={handleSendCode}
+            disabled={!email}
+            variant={variant}
+            size={size}
+            className={cn(className, "w-full")}
+          >
+            Send Verification Code
+          </Button>
+        ) : (
+          <>
+            <input
+              type="text"
+              placeholder="Enter verification code"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-md"
+            />
+            <div className="flex gap-2">
+              <Button
+                onClick={handleEmailSignIn}
+                disabled={isConnecting || !verificationCode}
+                variant={variant}
+                size={size}
+                className={cn(className, "flex-1")}
+              >
+                {isConnecting ? "Connecting..." : "Sign In"}
+              </Button>
+              <Button
+                onClick={() => {
+                  setCodeSent(false);
+                  setVerificationCode("");
+                }}
+                variant="outline"
+                size={size}
+              >
+                Resend
+              </Button>
+            </div>
+          </>
+        )}
+        <Button
+          onClick={() => {
+            setShowEmailForm(false);
+            setCodeSent(false);
+            setEmail("");
+            setVerificationCode("");
+          }}
+          variant="outline"
+          size={size}
+          className="w-full"
+        >
+          Cancel
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <Button
