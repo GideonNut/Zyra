@@ -214,7 +214,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
               <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Zyra for Ghana.
+                Zyra for Ghana Shops.
                 <br />
                 Get Paid Instantly.
               </h1>
