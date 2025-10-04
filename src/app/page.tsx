@@ -267,32 +267,32 @@ export default function Home() {
                   <p className="text-muted-foreground">Connect your wallet to start creating invoices</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <ConnectButton id="email" isEmailSignIn variant="outline" className="flex items-center justify-center gap-2 h-10 px-3">
+                <div className="space-y-4">
+                  <ConnectButton id="email" isEmailSignIn variant="outline" className="flex items-center justify-center gap-2 h-10 px-3 w-full">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
-                    Email
+                    Sign in with Email
                   </ConnectButton>
-                  <ConnectButton id="io.metamask" variant="outline" className="flex items-center justify-center gap-2 h-10 px-3">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" className="w-5 h-5" />
-                    MetaMask
-                  </ConnectButton>
-                  <ConnectButton id="com.coinbase.wallet" variant="outline" className="flex items-center justify-center gap-2 h-10 px-3">
-                    <img src="https://avatars.githubusercontent.com/u/18060234?s=280&v=4" alt="Coinbase" className="w-5 h-5 rounded" />
-                    Coinbase
-                  </ConnectButton>
-                  <ConnectButton id="io.rabby" variant="outline" className="flex items-center justify-center gap-2 h-10 px-3">
-                    <img src="https://rabby.io/assets/images/logo-128.png" alt="Rabby" className="w-5 h-5 rounded" />
-                    Rabby
-                  </ConnectButton>
-                </div>
-                
-                <div className="mt-3">
-                  <ConnectButton id="me.rainbow" variant="outline" className="flex items-center justify-center gap-2 h-10 px-3 w-full">
-                    <img src="https://rainbow.me/favicon.ico" alt="Rainbow" className="w-5 h-5 rounded" />
-                    Rainbow
-                  </ConnectButton>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <ConnectButton id="io.metamask" variant="outline" className="flex items-center justify-center gap-2 h-10 px-3">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" className="w-5 h-5" />
+                      MetaMask
+                    </ConnectButton>
+                    <ConnectButton id="com.coinbase.wallet" variant="outline" className="flex items-center justify-center gap-2 h-10 px-3">
+                      <img src="https://avatars.githubusercontent.com/u/18060234?s=280&v=4" alt="Coinbase" className="w-5 h-5 rounded" />
+                      Coinbase
+                    </ConnectButton>
+                    <ConnectButton id="io.rabby" variant="outline" className="flex items-center justify-center gap-2 h-10 px-3">
+                      <img src="https://rabby.io/assets/images/logo-128.png" alt="Rabby" className="w-5 h-5 rounded" />
+                      Rabby
+                    </ConnectButton>
+                    <ConnectButton id="me.rainbow" variant="outline" className="flex items-center justify-center gap-2 h-10 px-3">
+                      <img src="https://rainbow.me/favicon.ico" alt="Rainbow" className="w-5 h-5 rounded" />
+                      Rainbow
+                    </ConnectButton>
+                  </div>
                 </div>
 
                 <div className="mt-6 text-center">
@@ -303,13 +303,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Bottom CTA */}
-            <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full text-sm text-muted-foreground">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                Trusted by crypto users worldwide
-              </div>
-            </div>
           </div>
         </main>
       </div>
