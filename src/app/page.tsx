@@ -28,6 +28,7 @@ import {
 import { FileText, Plus, Check, Clock } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { InvoicePDFGenerator } from "@/components/invoice-pdf-generator";
 
 interface PaymentLink {
   id: string;
@@ -64,10 +65,15 @@ interface MobileMoneyInvoice {
   paymentMethod: 'mobile_money';
   reference: string;
   customer: {
+    id?: number;
     email?: string;
     first_name?: string;
     last_name?: string;
     phone?: string;
+    customer_code?: string;
+    metadata?: Record<string, unknown>;
+    risk_action?: string;
+    international_format_phone?: string;
   };
   paid_at: string;
   createdAt: string;
@@ -504,12 +510,13 @@ export default function Home() {
                       <TableHead className="font-semibold">Method</TableHead>
                       <TableHead className="font-semibold">Status</TableHead>
                       <TableHead className="font-semibold">Created</TableHead>
+                      <TableHead className="font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paymentLinks.length === 0 && mobileMoneyInvoices.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-12">
+                        <TableCell colSpan={6} className="text-center py-12">
                           <div className="flex flex-col items-center gap-3">
                             <FileText className="h-12 w-12 text-muted-foreground/50" />
                             <div>
@@ -549,6 +556,20 @@ export default function Home() {
                             </Badge>
                           </TableCell>
                           <TableCell className="py-4 text-muted-foreground">{formatDate(link.createdAt)}</TableCell>
+                          <TableCell className="py-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // For crypto payments, we could generate a different type of invoice
+                                alert('PDF generation for crypto payments coming soon!');
+                              }}
+                            >
+                              <FileText className="h-3 w-3 mr-1" />
+                              PDF
+                            </Button>
+                          </TableCell>
                         </TableRow>
                         ))}
                         
@@ -558,8 +579,7 @@ export default function Home() {
                             key={invoice.id}
                             className="cursor-pointer hover:bg-muted/50 transition-colors border-border/50"
                             onClick={() => {
-                              // For mobile money invoices, we could show details in a modal or redirect to a details page
-                              alert(`Mobile Money Invoice Details:\n\nCustomer: ${invoice.metadata.customer_name}\nAmount: ${invoice.metadata.original_amount} ${invoice.metadata.original_currency}\nReference: ${invoice.reference}\nPaid: ${formatDate(invoice.paid_at)}`);
+                              window.open(`/invoice/${invoice.id}`, '_blank');
                             }}
                           >
                             <TableCell className="font-medium py-4">{invoice.title}</TableCell>
@@ -581,6 +601,9 @@ export default function Home() {
                             </TableCell>
                             <TableCell className="py-4 text-muted-foreground">
                               {formatDate(invoice.createdAt)}
+                            </TableCell>
+                            <TableCell className="py-4">
+                              <InvoicePDFGenerator invoice={invoice} />
                             </TableCell>
                           </TableRow>
                         ))}
