@@ -10,10 +10,15 @@ export interface MobileMoneyInvoice {
   paymentMethod: 'mobile_money';
   reference: string;
   customer: {
+    id?: number;
     email?: string;
     first_name?: string;
     last_name?: string;
     phone?: string;
+    customer_code?: string;
+    metadata?: Record<string, unknown>;
+    risk_action?: string;
+    international_format_phone?: string;
   };
   paid_at: string;
   createdAt: string;
