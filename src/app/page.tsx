@@ -101,6 +101,21 @@ export default function Home() {
     }
   }, [account?.address]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Fetch mobile money invoices independently of wallet connection
+  useEffect(() => {
+    const fetchMobileMoneyInvoices = async () => {
+      try {
+        const mobileMoneyResponse = await fetch('/api/mobile-money-invoices');
+        const mobileMoneyData = await mobileMoneyResponse.json();
+        setMobileMoneyInvoices(mobileMoneyData.invoices || []);
+      } catch (error) {
+        console.error('Error fetching mobile money invoices:', error);
+      }
+    };
+
+    fetchMobileMoneyInvoices();
+  }, []);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -113,9 +128,6 @@ export default function Home() {
       const paymentsResponse = await fetch('/api/payments');
       const paymentsData = await paymentsResponse.json();
 
-      // Fetch mobile money invoices
-      const mobileMoneyResponse = await fetch('/api/mobile-money-invoices');
-      const mobileMoneyData = await mobileMoneyResponse.json();
 
       // Get unique tokens to fetch prices for
       const links = linksData.data || [];
@@ -155,7 +167,6 @@ export default function Home() {
 
       setPaymentLinks(linksWithPrices);
       setPayments(paymentsData.data || []);
-      setMobileMoneyInvoices(mobileMoneyData.invoices || []);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
