@@ -146,12 +146,13 @@ export function InvoicePDFGenerator({ invoice, className }: InvoicePDFGeneratorP
 
     } catch (error) {
       console.error('Error generating PDF:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
         invoice: invoice
       });
-      alert(`Failed to generate PDF: ${error.message}`);
+      alert(`Failed to generate PDF: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
