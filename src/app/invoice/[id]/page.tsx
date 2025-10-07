@@ -174,7 +174,7 @@ export default function InvoiceDetailPage() {
             <CardHeader>
               <CardTitle>Payment Amount</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex items-center justify-center">
               <div className="text-center">
                 <p className="text-4xl font-bold text-green-600 mb-2">
                   {invoice.metadata.original_amount} {invoice.metadata.original_currency}
@@ -261,7 +261,7 @@ export default function InvoiceDetailPage() {
         </Card>
 
         {/* Status */}
-        <Card className="mt-6 border-green-200 bg-green-50">
+        <Card className="mt-6 border-green-200">
           <CardContent className="pt-6">
             <div className="text-center">
               <Check className="h-12 w-12 text-green-600 mx-auto mb-4" />
