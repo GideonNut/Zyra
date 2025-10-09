@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveInvoice } from '@/lib/invoice-storage';
+import { whatsappService } from '@/lib/whatsapp-service';
+import { getWhatsAppConfig } from '@/lib/whatsapp-config';
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,6 +41,28 @@ export async function POST(request: NextRequest) {
       try {
         const savedInvoice = await saveInvoice(invoiceData);
         console.log('Webhook: Mobile Money Payment Invoice Created:', savedInvoice);
+
+        // Send WhatsApp notification if configured
+        const whatsappConfig = getWhatsAppConfig();
+        if (whatsappConfig.enabled && whatsappService.isConfigured()) {
+          const phoneNumber = data.metadata?.phone_number;
+          if (phoneNumber) {
+            try {
+              await whatsappService.sendPaymentSuccessNotification(
+                phoneNumber,
+                data.metadata?.customer_name || 'Customer',
+                (data.amount / 100).toFixed(2), // Convert from kobo to currency
+                data.currency,
+                'mobile_money',
+                data.reference
+              );
+              console.log('Webhook: WhatsApp notification sent successfully');
+            } catch (whatsappError) {
+              console.error('Webhook: Error sending WhatsApp notification:', whatsappError);
+              // Don't fail the webhook processing if WhatsApp notification fails
+            }
+          }
+        }
       } catch (invoiceError) {
         console.error('Webhook: Error creating invoice for mobile money payment:', invoiceError);
       }
