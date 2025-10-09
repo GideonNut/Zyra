@@ -34,6 +34,7 @@ Zyra is a comprehensive invoice management platform that supports multiple payme
 
 - **Multi-Chain Support**: Accept payments across different blockchain networks
 - **Mobile Money Integration**: Seamless Paystack integration for mobile money payments
+- **WhatsApp Notifications**: Automatic payment notifications via WhatsApp Business API
 - **Unified Dashboard**: View all invoices (crypto + mobile money) in one place
 - **Real-time Statistics**: Track total invoices, paid amounts, and pending payments
 - **Professional Invoices**: Generate clean, professional invoice pages
