@@ -29,6 +29,9 @@ import { FileText, Plus, Check, Clock } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { InvoicePDFGenerator } from "@/components/invoice-pdf-generator";
+import { AdvancedFilter, FilterState } from "@/components/ui/advanced-filter";
+import { ExportInvoices } from "@/components/export-invoices";
+import { filterInvoices, sortInvoices, Invoice } from "@/lib/invoice-filtering";
 
 interface PaymentLink {
   id: string;
@@ -94,6 +97,16 @@ export default function Home() {
   const [mobileMoneyInvoices, setMobileMoneyInvoices] = useState<MobileMoneyInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    status: [],
+    paymentMethod: [],
+    dateRange: { from: undefined, to: undefined },
+    amountRange: { min: "", max: "" },
+    customer: "",
+  });
+  const [sortBy, setSortBy] = useState<string>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
     if (account?.address) {
@@ -200,14 +213,58 @@ export default function Home() {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const handleRowClick = (link: PaymentLink) => {
-    const invoiceUrl = `/${link.id}`;
-    window.open(invoiceUrl, '_blank');
-  };
 
   const handleInvoiceCreated = () => {
     setIsModalOpen(false);
     fetchData(); // Refresh the data
+  };
+
+  // Combine all invoices for filtering
+  const getAllInvoices = (): Invoice[] => {
+    const cryptoInvoices: Invoice[] = paymentLinks.map(link => ({
+      id: link.id,
+      title: link.title,
+      description: link.description,
+      amount: link.amount,
+      paymentMethod: "crypto",
+      status: getPaymentStatus(link.id),
+      createdAt: link.createdAt,
+      destinationToken: link.destinationToken,
+      priceUsd: link.priceUsd,
+    }));
+
+    const mobileInvoices: Invoice[] = mobileMoneyInvoices.map(invoice => ({
+      id: invoice.id,
+      title: invoice.title,
+      description: invoice.description,
+      amount: invoice.amount,
+      paymentMethod: "mobile_money",
+      status: "paid",
+      createdAt: invoice.createdAt,
+      paidAt: invoice.paid_at,
+      reference: invoice.reference,
+      metadata: invoice.metadata,
+    }));
+
+    return [...cryptoInvoices, ...mobileInvoices];
+  };
+
+  // Apply filters and sorting
+  const filteredAndSortedInvoices = sortInvoices(
+    filterInvoices(getAllInvoices(), filters),
+    sortBy,
+    sortOrder
+  );
+
+  const clearFilters = () => {
+    setFilters({
+      search: "",
+      status: [],
+      paymentMethod: [],
+      dateRange: { from: undefined, to: undefined },
+      amountRange: { min: "", max: "" },
+      customer: "",
+    });
   };
 
   if (!account) {
@@ -501,13 +558,48 @@ export default function Home() {
             </Card>
           </div>
 
+          {/* Advanced Filter */}
+          <Card className="shadow-lg">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-semibold">Filter & Search Invoices</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <AdvancedFilter
+                filters={filters}
+                onFiltersChange={setFilters}
+                onClearFilters={clearFilters}
+              />
+            </CardContent>
+          </Card>
+
           {/* Invoices Table */}
           <Card className="shadow-lg">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-semibold">Recent Invoices</CardTitle>
-                <div className="text-sm text-muted-foreground">
-                  {paymentLinks.length} {paymentLinks.length === 1 ? 'invoice' : 'invoices'}
+                <div className="flex items-center gap-4">
+                  <CardTitle className="text-xl font-semibold">Invoices</CardTitle>
+                  <div className="text-sm text-muted-foreground">
+                    {filteredAndSortedInvoices.length} of {getAllInvoices().length} invoice{getAllInvoices().length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ExportInvoices invoices={filteredAndSortedInvoices} />
+                  <select
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [field, order] = e.target.value.split('-');
+                      setSortBy(field);
+                      setSortOrder(order as "asc" | "desc");
+                    }}
+                    className="px-3 py-1 text-sm border border-border rounded-md bg-background"
+                  >
+                    <option value="date-desc">Date (Newest)</option>
+                    <option value="date-asc">Date (Oldest)</option>
+                    <option value="amount-desc">Amount (High to Low)</option>
+                    <option value="amount-asc">Amount (Low to High)</option>
+                    <option value="customer-asc">Customer (A-Z)</option>
+                    <option value="customer-desc">Customer (Z-A)</option>
+                  </select>
                 </div>
               </div>
             </CardHeader>
@@ -525,100 +617,94 @@ export default function Home() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paymentLinks.length === 0 && mobileMoneyInvoices.length === 0 ? (
+                    {filteredAndSortedInvoices.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-12">
                           <div className="flex flex-col items-center gap-3">
                             <FileText className="h-12 w-12 text-muted-foreground/50" />
                             <div>
-                              <p className="font-medium text-muted-foreground">No invoices yet</p>
-                              <p className="text-sm text-muted-foreground/70">Create your first invoice to get started</p>
+                              <p className="font-medium text-muted-foreground">
+                                {getAllInvoices().length === 0 ? "No invoices yet" : "No invoices match your filters"}
+                              </p>
+                              <p className="text-sm text-muted-foreground/70">
+                                {getAllInvoices().length === 0 
+                                  ? "Create your first invoice to get started" 
+                                  : "Try adjusting your search criteria"}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
                       </TableRow>
                     ) : (
-                      <>
-                        {/* Crypto Payment Links */}
-                        {paymentLinks.map((link) => (
+                      filteredAndSortedInvoices.map((invoice) => (
                         <TableRow
-                          key={link.id}
+                          key={invoice.id}
                           className="cursor-pointer hover:bg-muted/50 transition-colors border-border/50"
-                          onClick={() => handleRowClick(link)}
+                          onClick={() => {
+                            if (invoice.paymentMethod === "mobile_money") {
+                              window.open(`/invoice/${invoice.id}`, '_blank');
+                            } else {
+                              window.open(`/${invoice.id}`, '_blank');
+                            }
+                          }}
                         >
-                          <TableCell className="font-medium py-4">{link.title}</TableCell>
+                          <TableCell className="font-medium py-4">
+                            {invoice.paymentMethod === "mobile_money" 
+                              ? invoice.metadata?.customer_name || invoice.title
+                              : invoice.title
+                            }
+                          </TableCell>
                           <TableCell className="py-4">
                             <span className="font-mono font-medium">
-                              {formatUsdAmount(link.amount, link.destinationToken?.decimals, link.priceUsd) ||
-                                `${formatAmount(link.amount, link.destinationToken?.decimals)} ${link.destinationToken?.symbol}`}
+                              {invoice.paymentMethod === "mobile_money" 
+                                ? `${invoice.metadata?.original_amount} ${invoice.metadata?.original_currency}`
+                                : (invoice.priceUsd 
+                                  ? formatUsdAmount(invoice.amount, invoice.destinationToken?.decimals, invoice.priceUsd) ||
+                                    `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
+                                  : `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
+                                )
+                              }
                             </span>
                           </TableCell>
                           <TableCell className="py-4">
-                            <Badge variant="outline" className="font-mono text-xs">
-                              Crypto (Chain {link.destinationToken?.chainId})
+                            <Badge variant="outline" className="text-xs">
+                              {invoice.paymentMethod === "mobile_money" 
+                                ? "Mobile Money"
+                                : `Crypto (Chain ${invoice.destinationToken?.chainId})`
+                              }
                             </Badge>
                           </TableCell>
                           <TableCell className="py-4">
                             <Badge
-                              variant={getPaymentStatus(link.id) === 'Paid' ? 'default' : 'secondary'}
-                              className={getPaymentStatus(link.id) === 'Paid' ? 'bg-green-600/20 hover:bg-green-600/20 border border-green-600 text-green-600' : ''}
+                              variant={invoice.status === 'Paid' ? 'default' : 'secondary'}
+                              className={invoice.status === 'Paid' ? 'bg-green-600/20 hover:bg-green-600/20 border border-green-600 text-green-600' : ''}
                             >
-                              {getPaymentStatus(link.id)}
+                              {invoice.status === 'Paid' && <Check className="h-3 w-3 mr-1" />}
+                              {invoice.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-4 text-muted-foreground">{formatDate(link.createdAt)}</TableCell>
+                          <TableCell className="py-4 text-muted-foreground">
+                            {formatDate(invoice.createdAt)}
+                          </TableCell>
                           <TableCell className="py-4">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // For crypto payments, we could generate a different type of invoice
-                                alert('PDF generation for crypto payments coming soon!');
-                              }}
-                            >
-                              <FileText className="h-3 w-3 mr-1" />
-                              PDF
-                            </Button>
+                            {invoice.paymentMethod === "mobile_money" ? (
+                              <InvoicePDFGenerator invoice={invoice as unknown as MobileMoneyInvoice} />
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  alert('PDF generation for crypto payments coming soon!');
+                                }}
+                              >
+                                <FileText className="h-3 w-3 mr-1" />
+                                PDF
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
-                        ))}
-                        
-                        {/* Mobile Money Invoices */}
-                        {mobileMoneyInvoices.map((invoice) => (
-                          <TableRow
-                            key={invoice.id}
-                            className="cursor-pointer hover:bg-muted/50 transition-colors border-border/50"
-                            onClick={() => {
-                              window.open(`/invoice/${invoice.id}`, '_blank');
-                            }}
-                          >
-                            <TableCell className="font-medium py-4">{invoice.title}</TableCell>
-                            <TableCell className="py-4">
-                              <span className="font-mono font-medium">
-                                {invoice.metadata.original_amount} {invoice.metadata.original_currency}
-                              </span>
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <Badge variant="outline" className="text-xs">
-                                Mobile Money
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <Badge variant="default" className="flex items-center gap-1 bg-green-600/20 hover:bg-green-600/20 border border-green-600 text-green-600">
-                                <Check className="h-3 w-3" />
-                                Paid
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="py-4 text-muted-foreground">
-                              {formatDate(invoice.createdAt)}
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <InvoicePDFGenerator invoice={invoice} />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </>
+                      ))
                     )}
                   </TableBody>
                 </Table>
