@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveInvoice } from '@/lib/invoice-storage';
+import { saveCompanyInvoice } from '@/lib/company-invoice-storage';
 import { whatsappService } from '@/lib/whatsapp-service';
+import path from 'path';
+import { promises as fs } from 'fs';
 import { getWhatsAppConfig } from '@/lib/whatsapp-config';
 
 export async function POST(request: NextRequest) {
@@ -39,28 +42,85 @@ export async function POST(request: NextRequest) {
       };
 
       try {
-        const savedInvoice = await saveInvoice(invoiceData);
-        console.log('Webhook: Mobile Money Payment Invoice Created:', savedInvoice);
+        const companySlug: string | undefined = data.metadata?.company_slug || undefined;
+        if (companySlug) {
+          const saved = await saveCompanyInvoice(companySlug, invoiceData);
+          console.log('Webhook: Company Mobile Money Invoice Created:', companySlug, saved.id);
+        } else {
+          const savedInvoice = await saveInvoice(invoiceData);
+          console.log('Webhook: Mobile Money Payment Invoice Created:', savedInvoice);
+        }
 
-        // Send WhatsApp notification if configured
-        const whatsappConfig = getWhatsAppConfig();
-        if (whatsappConfig.enabled && whatsappService.isConfigured()) {
-          const phoneNumber = data.metadata?.phone_number;
-          if (phoneNumber) {
-            try {
-              await whatsappService.sendPaymentSuccessNotification(
-                phoneNumber,
-                data.metadata?.customer_name || 'Customer',
-                (data.amount / 100).toFixed(2), // Convert from kobo to currency
-                data.currency,
-                'mobile_money',
-                data.reference
-              );
-              console.log('Webhook: WhatsApp notification sent successfully');
-            } catch (whatsappError) {
-              console.error('Webhook: Error sending WhatsApp notification:', whatsappError);
-              // Don't fail the webhook processing if WhatsApp notification fails
+        // Send WhatsApp notification using per-brand settings if available, otherwise env
+        const phoneNumber = data.metadata?.phone_number;
+        if (phoneNumber) {
+          try {
+            const companySlug: string | undefined = data.metadata?.company_slug || undefined;
+            if (companySlug) {
+              // try load brand config
+              const brandPath = path.join(process.cwd(), 'public', 'brands', companySlug, 'brand.json');
+              try {
+                const json = await fs.readFile(brandPath, 'utf-8');
+                const brand = JSON.parse(json) as { whatsapp?: { enabled?: boolean; accessToken?: string; phoneNumberId?: string } };
+                if (brand.whatsapp?.enabled) {
+                  const creds = { accessToken: brand.whatsapp.accessToken, phoneNumberId: brand.whatsapp.phoneNumberId };
+                  const ok = await whatsappService.sendPaymentSuccessNotificationWithCredentials(
+                    creds,
+                    phoneNumber,
+                    data.metadata?.customer_name || 'Customer',
+                    (data.amount / 100).toFixed(2),
+                    data.currency,
+                    'mobile_money',
+                    data.reference
+                  );
+                  if (ok) console.log('Webhook: WhatsApp (brand) notification sent successfully');
+                } else {
+                  // fallback to env-based if globally enabled
+                  const whatsappConfig = getWhatsAppConfig();
+                  if (whatsappConfig.enabled && whatsappService.isConfigured()) {
+                    await whatsappService.sendPaymentSuccessNotification(
+                      phoneNumber,
+                      data.metadata?.customer_name || 'Customer',
+                      (data.amount / 100).toFixed(2),
+                      data.currency,
+                      'mobile_money',
+                      data.reference
+                    );
+                    console.log('Webhook: WhatsApp (env) notification sent successfully');
+                  }
+                }
+              } catch {
+                // if brand config not found or invalid, fallback to env
+                const whatsappConfig = getWhatsAppConfig();
+                if (whatsappConfig.enabled && whatsappService.isConfigured()) {
+                  await whatsappService.sendPaymentSuccessNotification(
+                    phoneNumber,
+                    data.metadata?.customer_name || 'Customer',
+                    (data.amount / 100).toFixed(2),
+                    data.currency,
+                    'mobile_money',
+                    data.reference
+                  );
+                  console.log('Webhook: WhatsApp (env) notification sent successfully');
+                }
+              }
+            } else {
+              const whatsappConfig = getWhatsAppConfig();
+              if (whatsappConfig.enabled && whatsappService.isConfigured()) {
+                await whatsappService.sendPaymentSuccessNotification(
+                  phoneNumber,
+                  data.metadata?.customer_name || 'Customer',
+                  (data.amount / 100).toFixed(2),
+                  data.currency,
+                  'mobile_money',
+                  data.reference
+                );
+                console.log('Webhook: WhatsApp (env) notification sent successfully');
+              }
             }
+          } catch (whatsappError) {
+            console.error('Webhook: Error sending WhatsApp notification:', whatsappError);
+            // Don't fail the webhook processing if WhatsApp notification fails
           }
         }
       } catch (invoiceError) {
