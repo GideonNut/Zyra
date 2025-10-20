@@ -3,8 +3,8 @@
   "name": "Fruity Gold",
   "assets": {
     "logo": {
-      "light": "/brands/fruity-gold/logo-light.png",
-      "dark": "/brands/fruity-gold/logo-dark.png"
+      "light": "/brands/fruity-gold/logo.png",
+      "dark": "/brands/fruity-gold/logo.png"
     },
     "favicon": "/brands/fruity-gold/favicon.ico"
   },
