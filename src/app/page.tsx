@@ -32,6 +32,9 @@ import { InvoicePDFGenerator } from "@/components/invoice-pdf-generator";
 import { AdvancedFilter, FilterState } from "@/components/ui/advanced-filter";
 import { ExportInvoices } from "@/components/export-invoices";
 import { filterInvoices, sortInvoices, Invoice } from "@/lib/invoice-filtering";
+import { useBrand } from "@/contexts/brand-context";
+import { useTheme } from "@/contexts/theme-context";
+import Image from "next/image";
 
 interface PaymentLink {
   id: string;
@@ -107,6 +110,8 @@ export default function Home() {
   });
   const [sortBy, setSortBy] = useState<string>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const { brand, slug } = useBrand();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (account?.address) {
@@ -118,7 +123,10 @@ export default function Home() {
   useEffect(() => {
     const fetchMobileMoneyInvoices = async () => {
       try {
-        const mobileMoneyResponse = await fetch('/api/mobile-money-invoices');
+        const url = (typeof window !== 'undefined' && window.location?.pathname?.startsWith('/c/') && brand?.id)
+          ? `/api/companies/${slug}/mobile-money-invoices`
+          : '/api/mobile-money-invoices';
+        const mobileMoneyResponse = await fetch(url);
         const mobileMoneyData = await mobileMoneyResponse.json();
         setMobileMoneyInvoices(mobileMoneyData.invoices || []);
       } catch (error) {
@@ -127,7 +135,7 @@ export default function Home() {
     };
 
     fetchMobileMoneyInvoices();
-  }, []);
+  }, [brand?.id, slug]);
 
   const fetchData = async () => {
     try {
@@ -274,10 +282,23 @@ export default function Home() {
         <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="size-6" />
-                <h1 className="text-xl font-bold">Zyra</h1>
-              </div>
+              {brand?.assets?.logo?.[theme] ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-xl font-bold">Zyra for</span>
+                  <Image
+                    src={brand.assets.logo[theme]!}
+                    alt={brand.name || "Company"}
+                    width={120}
+                    height={24}
+                    className="h-6 w-auto"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <FileText className="size-6" />
+                  <h1 className="text-xl font-bold">Zyra</h1>
+                </div>
+              )}
               <ThemeToggle />
             </div>
           </div>
@@ -388,10 +409,23 @@ export default function Home() {
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card">
           <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-2">
-              <FileText className="size-6" />
-              <h1 className="text-xl font-bold">Zyra</h1>
-            </div>
+            {brand?.assets?.logo?.[theme] ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xl font-bold">Zyra for</span>
+                <Image
+                  src={brand.assets.logo[theme]!}
+                  alt={brand.name || "Company"}
+                  width={120}
+                  height={24}
+                  className="h-6 w-auto"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <FileText className="size-6" />
+                <h1 className="text-xl font-bold">Zyra</h1>
+              </div>
+            )}
             <ThemeToggle />
           </div>
         </header>
@@ -474,10 +508,23 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <FileText className="size-6" />
-            <h1 className="text-xl font-bold">Zyra</h1>
-          </div>
+          {brand?.assets?.logo?.[theme] ? (
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-bold">Zyra for</span>
+              <Image
+                src={brand.assets.logo[theme]!}
+                alt={brand.name || "Company"}
+                width={120}
+                height={24}
+                className="h-6 w-auto"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <FileText className="size-6" />
+              <h1 className="text-xl font-bold">Zyra</h1>
+            </div>
+          )}
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -591,6 +638,7 @@ export default function Home() {
                       setSortBy(field);
                       setSortOrder(order as "asc" | "desc");
                     }}
+                    aria-label="Sort invoices"
                     className="px-3 py-1 text-sm border border-border rounded-md bg-background"
                   >
                     <option value="date-desc">Date (Newest)</option>
