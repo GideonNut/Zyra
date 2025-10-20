@@ -2,12 +2,7 @@
 
 import { CoinsIcon } from "lucide-react";
 import { useCallback, useMemo, useState, useEffect } from "react";
-import {
-  getAddress,
-  NATIVE_TOKEN_ADDRESS,
-  type ThirdwebClient,
-  Bridge,
-} from "thirdweb";
+import { type ThirdwebClient, Bridge } from "thirdweb";
 import { shortenAddress } from "thirdweb/utils";
 import { Badge } from "@/components/ui/badge";
 import { SelectWithSearch } from "@/components/ui/select-with-search";
@@ -127,7 +122,7 @@ export function TokenSelector(props: {
         try {
           if (!token.iconUri) return undefined;
           return resolveScheme({ client, uri: token.iconUri });
-        } catch (error) {
+        } catch {
           return undefined;
         }
       })();
