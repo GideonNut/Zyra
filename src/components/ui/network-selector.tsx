@@ -79,7 +79,7 @@ export function SingleNetworkSelector(props: {
         try {
           if (!chain.icon) return undefined;
           return resolveScheme({ client, uri: chain.icon });
-        } catch (error) {
+        } catch {
           return undefined;
         }
       })();
