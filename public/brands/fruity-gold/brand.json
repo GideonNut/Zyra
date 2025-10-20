@@ -1,0 +1,19 @@
+{
+  "id": "fruity-gold",
+  "name": "Fruity Gold",
+  "assets": {
+    "logo": {
+      "light": "/brands/fruity-gold/logo-light.png",
+      "dark": "/brands/fruity-gold/logo-dark.png"
+    },
+    "favicon": "/brands/fruity-gold/favicon.ico"
+  },
+  "meta": {
+    "title": "Fruity Gold Invoicing",
+    "description": "Invoices and instant payments powered by Zyra"
+  },
+  "payment": {
+    "receiver": "", 
+    "paystackPublicKey": ""
+  }
+}
