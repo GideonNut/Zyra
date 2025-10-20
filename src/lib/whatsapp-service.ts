@@ -33,6 +33,57 @@ class WhatsAppService {
   }
 
   /**
+   * Send a text message using provided credentials (per-brand overrides)
+   */
+  async sendMessageWithCredentials(
+    creds: { accessToken?: string; phoneNumberId?: string },
+    to: string,
+    message: string,
+  ): Promise<WhatsAppResponse | null> {
+    const altAccessToken = creds.accessToken || this.accessToken;
+    const altPhoneNumberId = creds.phoneNumberId || this.phoneNumberId;
+    if (!altAccessToken || !altPhoneNumberId) {
+      console.log('WhatsApp not configured for overrides, skipping notification:', message);
+      return null;
+    }
+
+    const baseUrl = `https://graph.facebook.com/v18.0/${altPhoneNumberId}/messages`;
+    const formattedPhone = this.formatPhoneNumber(to);
+    if (!formattedPhone) {
+      console.error('Invalid phone number format:', to);
+      return null;
+    }
+
+    const messageData: WhatsAppMessage = {
+      to: formattedPhone,
+      type: 'text',
+      text: { body: message },
+    };
+
+    try {
+      const response = await fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${altAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(messageData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('WhatsApp API error (override):', errorData);
+        return null;
+      }
+      const result = await response.json();
+      console.log('WhatsApp message sent successfully (override):', result);
+      return result;
+    } catch (error) {
+      console.error('Error sending WhatsApp message (override):', error);
+      return null;
+    }
+  }
+
+  /**
    * Send a text message via WhatsApp
    */
   async sendMessage(to: string, message: string): Promise<WhatsAppResponse | null> {
@@ -101,6 +152,52 @@ class WhatsAppService {
     );
 
     const result = await this.sendMessage(phoneNumber, message);
+    return result !== null;
+  }
+
+  /**
+   * Send payment notification using override credentials
+   */
+  async sendPaymentNotificationWithCredentials(
+    creds: { accessToken?: string; phoneNumberId?: string },
+    phoneNumber: string,
+    customerName: string,
+    amount: string,
+    currency: string,
+    paymentMethod: string,
+    reference?: string
+  ): Promise<boolean> {
+    const message = this.formatPaymentMessage(
+      customerName,
+      amount,
+      currency,
+      paymentMethod,
+      reference
+    );
+    const result = await this.sendMessageWithCredentials(creds, phoneNumber, message);
+    return result !== null;
+  }
+
+  /**
+   * Send payment success notification using override credentials
+   */
+  async sendPaymentSuccessNotificationWithCredentials(
+    creds: { accessToken?: string; phoneNumberId?: string },
+    phoneNumber: string,
+    customerName: string,
+    amount: string,
+    currency: string,
+    paymentMethod: string,
+    reference?: string
+  ): Promise<boolean> {
+    const message = this.formatPaymentSuccessMessage(
+      customerName,
+      amount,
+      currency,
+      paymentMethod,
+      reference
+    );
+    const result = await this.sendMessageWithCredentials(creds, phoneNumber, message);
     return result !== null;
   }
 
