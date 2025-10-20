@@ -1,0 +1,16 @@
+{
+  "$id": "./schemas/package.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Local Package.json Schema (permissive)",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "private": { "type": ["boolean", "string"] },
+    "scripts": { "type": "object", "additionalProperties": { "type": "string" } },
+    "dependencies": { "type": "object", "additionalProperties": { "type": ["string", "object"] } },
+    "devDependencies": { "type": "object", "additionalProperties": { "type": ["string", "object"] } },
+    "peerDependencies": { "type": "object", "additionalProperties": { "type": ["string", "object"] } }
+  }
+}
