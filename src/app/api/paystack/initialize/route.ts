@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customerName, phoneNumber, amount, currency, description, email } = body;
+    const { customerName, phoneNumber, amount, currency, description, email, companySlug } = body;
 
     // Validate required fields
     if (!customerName || !amount || !currency) {
@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
           customer_name: customerName,
           phone_number: phoneNumber,
           description: description,
+          company_slug: companySlug || null,
         },
         callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/callback`,
       }),
