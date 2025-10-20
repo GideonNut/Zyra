@@ -1,0 +1,27 @@
+{
+  "id": "acme",
+  "name": "Acme Stores",
+  "colors": {
+    "primary": "#0D9488",
+    "primaryForeground": "#FFFFFF",
+    "secondary": "#F1F5F9",
+    "secondaryForeground": "#0F172A",
+    "accent": "#22C55E",
+    "accentForeground": "#052e16",
+    "foreground": "#0F172A",
+    "background": "#FFFFFF",
+    "darkForeground": "#FFFFFF",
+    "darkBackground": "#0B0F1A"
+  },
+  "assets": {
+    "logo": {
+      "light": "/brands/acme/logo-light.png",
+      "dark": "/brands/acme/logo-dark.png"
+    },
+    "favicon": "/brands/acme/favicon.ico"
+  },
+  "meta": {
+    "title": "Acme Invoicing",
+    "description": "Invoices and instant payments powered by Zyra"
+  }
+}
