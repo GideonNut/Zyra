@@ -20,6 +20,7 @@ import { toUnits } from "thirdweb";
 import { TokenSelector } from "@/components/ui/token-selector";
 import { SingleNetworkSelector } from "@/components/ui/network-selector";
 import { client } from "@/lib/constants";
+import { useBrand } from "@/contexts/brand-context";
 
 // Extend Window interface for Paystack
 declare global {
@@ -69,6 +70,7 @@ interface PaymentFormProps {
 
 export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
   const account = useActiveAccount();
+  const { brand, slug } = useBrand();
   const [isCreating, setIsCreating] = useState(false);
   const [paymentLink, setPaymentLink] = useState<string | null>(null);
   const [selectedToken, setSelectedToken] = useState<TokenMetadata | null>(null);
@@ -117,7 +119,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
             intent: {
               destinationChainId: selectedChainId,
               destinationTokenAddress: selectedToken.address,
-              receiver: account!.address,
+              receiver: brand?.payment?.receiver || account!.address,
               amount: amountInWei,
             },
           }),
@@ -149,6 +151,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
             currency: values.currency,
             description: values.description,
             email: `${values.phoneNumber}@mobilemoney.gh`, // Use phone as email for mobile money
+            companySlug: slug,
           }),
         });
 
@@ -161,7 +164,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
         // Initialize Paystack payment
         if (typeof window !== 'undefined' && window.PaystackPop) {
           const paystack = window.PaystackPop.setup({
-            key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+            key: (brand?.payment?.paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || ''),
             email: data.email,
             amount: data.amount,
             currency: data.currency,
