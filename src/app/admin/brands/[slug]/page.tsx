@@ -5,6 +5,16 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface InventoryItem {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  quantity: number;
+  sku?: string;
+  imageUrl?: string;
+}
+
 type Brand = {
   id: string;
   name: string;
@@ -18,6 +28,10 @@ type Brand = {
     phoneNumberId?: string;
     verifyWebhook?: boolean;
     webhookSecret?: string;
+  };
+  inventory?: {
+    enabled?: boolean;
+    items?: InventoryItem[];
   };
 };
 
@@ -343,6 +357,204 @@ export default function BrandEditorPage() {
                 placeholder="Invoices and instant payments powered by Zyra"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Inventory Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+              <label htmlFor="inventory-enabled" className="text-sm text-muted-foreground">
+                Enable Inventory Management
+              </label>
+              <input
+                id="inventory-enabled"
+                type="checkbox"
+                className="h-4 w-4"
+                checked={!!brand.inventory?.enabled}
+                onChange={(e) => setBrand({
+                  ...brand,
+                  inventory: { 
+                    ...(brand.inventory || {}), 
+                    enabled: e.target.checked,
+                    items: brand.inventory?.items || []
+                  }
+                })}
+              />
+            </div>
+
+            {brand.inventory?.enabled && (
+              <div className="mt-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium">Inventory Items</h3>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      const newItem: InventoryItem = {
+                        id: `item-${Date.now()}`,
+                        name: '',
+                        price: 0,
+                        quantity: 0
+                      };
+                      setBrand({
+                        ...brand,
+                        inventory: {
+                          ...brand.inventory!,
+                          items: [...(brand.inventory?.items || []), newItem]
+                        }
+                      });
+                    }}
+                  >
+                    + Add Item
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {brand.inventory?.items?.map((item, index) => (
+                    <div key={item.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm text-muted-foreground">Name</label>
+                          <input
+                            className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                            value={item.name}
+                            onChange={(e) => {
+                              const items = [...(brand.inventory?.items || [])];
+                              items[index] = { ...item, name: e.target.value };
+                              setBrand({
+                                ...brand,
+                                inventory: { ...brand.inventory!, items }
+                              });
+                            }}
+                            placeholder="Item name"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-muted-foreground">SKU (Optional)</label>
+                          <input
+                            className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                            value={item.sku || ''}
+                            onChange={(e) => {
+                              const items = [...(brand.inventory?.items || [])];
+                              items[index] = { ...item, sku: e.target.value };
+                              setBrand({
+                                ...brand,
+                                inventory: { ...brand.inventory!, items }
+                              });
+                            }}
+                            placeholder="SKU-123"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-sm text-muted-foreground">Description (Optional)</label>
+                        <textarea
+                          className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                          value={item.description || ''}
+                          onChange={(e) => {
+                            const items = [...(brand.inventory?.items || [])];
+                            items[index] = { ...item, description: e.target.value };
+                            setBrand({
+                              ...brand,
+                              inventory: { ...brand.inventory!, items }
+                            });
+                          }}
+                          placeholder="Item description"
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label htmlFor={`price-${item.id}`} className="text-sm text-muted-foreground">
+                            Price
+                          </label>
+                          <div className="relative mt-1">
+                            <span className="absolute left-3 top-2 text-muted-foreground">$</span>
+                            <input
+                              id={`price-${item.id}`}
+                              type="number"
+                              className="w-full pl-8 pr-3 py-2 rounded border border-border bg-background"
+                              value={item.price}
+                              onChange={(e) => {
+                                const items = [...(brand.inventory?.items || [])];
+                                items[index] = { ...item, price: parseFloat(e.target.value) || 0 };
+                                setBrand({
+                                  ...brand,
+                                  inventory: { ...brand.inventory!, items }
+                                });
+                              }}
+                              min="0"
+                              step="0.01"
+                              aria-label="Item price in dollars"
+                              placeholder="0.00"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label htmlFor={`quantity-${item.id}`} className="text-sm text-muted-foreground">
+                            Quantity
+                          </label>
+                          <input
+                            id={`quantity-${item.id}`}
+                            type="number"
+                            className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const items = [...(brand.inventory?.items || [])];
+                              items[index] = { ...item, quantity: parseInt(e.target.value) || 0 };
+                              setBrand({
+                                ...brand,
+                                inventory: { ...brand.inventory!, items }
+                              });
+                            }}
+                            min="0"
+                            aria-label="Item quantity in stock"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm text-muted-foreground">Image URL (Optional)</label>
+                          <input
+                            className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                            value={item.imageUrl || ''}
+                            onChange={(e) => {
+                              const items = [...(brand.inventory?.items || [])];
+                              items[index] = { ...item, imageUrl: e.target.value };
+                              setBrand({
+                                ...brand,
+                                inventory: { ...brand.inventory!, items }
+                              });
+                            }}
+                            placeholder="https://example.com/image.jpg"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            const items = (brand.inventory?.items || []).filter((_, i) => i !== index);
+                            setBrand({
+                              ...brand,
+                              inventory: { ...brand.inventory!, items }
+                            });
+                          }}
+                        >
+                          Remove Item
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
