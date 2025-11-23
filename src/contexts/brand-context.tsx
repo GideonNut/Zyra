@@ -3,6 +3,16 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 
+export interface InventoryItem {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  quantity: number;
+  sku?: string;
+  imageUrl?: string;
+}
+
 export type Brand = {
   id: string;
   name: string;
@@ -33,6 +43,10 @@ export type Brand = {
     phoneNumberId?: string;
     verifyWebhook?: boolean;
     webhookSecret?: string;
+  };
+  inventory?: {
+    enabled?: boolean;
+    items?: InventoryItem[];
   };
 };
 
