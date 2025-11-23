@@ -15,12 +15,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useActiveAccount } from "thirdweb/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toUnits } from "thirdweb";
 import { TokenSelector } from "@/components/ui/token-selector";
 import { SingleNetworkSelector } from "@/components/ui/network-selector";
 import { client } from "@/lib/constants";
 import { useBrand } from "@/contexts/brand-context";
+import { Switch } from "@/components/ui/switch";
+import { InventoryItem } from "@/contexts/brand-context";
 
 // Extend Window interface for Paystack
 declare global {
@@ -50,6 +52,13 @@ const formSchema = z.object({
   currency: z.enum(["GHS", "USD", "CRYPTO"]).default("GHS"),
   paymentMethod: z.enum(["mobile_money", "crypto"]).default("mobile_money"),
   description: z.string().optional(),
+  useInventory: z.boolean().default(false),
+  selectedItems: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    price: z.number(),
+    quantity: z.number().min(0),
+  })).default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -76,7 +85,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
   const [selectedToken, setSelectedToken] = useState<TokenMetadata | null>(null);
   const [selectedChainId, setSelectedChainId] = useState<number | undefined>(undefined);
   const [paymentMethod, setPaymentMethod] = useState<"mobile_money" | "crypto">("mobile_money");
-
+  
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(formSchema as any),
@@ -87,12 +96,84 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
       currency: "GHS",
       paymentMethod: "mobile_money",
       description: "",
+      useInventory: false,
+      selectedItems: [],
     },
   });
+
+  // Calculate total from selected items
+  const watchSelectedItems = form.watch("selectedItems");
+  const watchUseInventory = form.watch("useInventory");
+  
+  useEffect(() => {
+    if (watchUseInventory) {
+      const total = watchSelectedItems.reduce(
+        (sum, item) => sum + (item.price * item.quantity),
+        0
+      );
+      form.setValue("amount", total.toFixed(2));
+    }
+  }, [watchSelectedItems, watchUseInventory, form]);
+
+  // Handle inventory item quantity change
+  const handleQuantityChange = (itemId: string, quantity: number) => {
+    const currentItems = form.getValues("selectedItems") || [];
+    const itemIndex = currentItems.findIndex(item => item.id === itemId);
+    
+    if (itemIndex >= 0) {
+      const updatedItems = [...currentItems];
+      updatedItems[itemIndex] = {
+        ...updatedItems[itemIndex],
+        quantity: Math.max(0, quantity)
+      };
+      form.setValue("selectedItems", updatedItems);
+    }
+  };
+
+  // Toggle item selection
+  const toggleItemSelection = (item: InventoryItem) => {
+    const currentItems = form.getValues("selectedItems") || [];
+    const itemIndex = currentItems.findIndex(i => i.id === item.id);
+    
+    if (itemIndex >= 0) {
+      // Remove item if already selected
+      const updatedItems = currentItems.filter(i => i.id !== item.id);
+      form.setValue("selectedItems", updatedItems);
+    } else {
+      // Add item with quantity 1
+      form.setValue("selectedItems", [
+        ...currentItems,
+        {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: 1
+        }
+      ]);
+    }
+  };
 
   async function onSubmit(values: FormValues) {
     setIsCreating(true);
     try {
+      // Validate inventory items if using inventory
+      if (values.useInventory) {
+        const hasItems = values.selectedItems && values.selectedItems.length > 0;
+        if (!hasItems) {
+          alert("Please select at least one item from inventory");
+          setIsCreating(false);
+          return;
+        }
+        
+        const hasValidQuantities = values.selectedItems.every(
+          item => item.quantity > 0
+        );
+        if (!hasValidQuantities) {
+          alert("Please enter valid quantities for all selected items");
+          setIsCreating(false);
+          return;
+        }
+      }
       if (values.paymentMethod === "crypto") {
         // Handle crypto payments
         if (!selectedChainId) {
@@ -358,19 +439,134 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
               </>
             )}
 
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0.1" type="number" step="any" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {brand?.inventory?.enabled && (
+              <FormField
+                control={form.control}
+                name="useInventory"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Use Inventory</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Select items from your inventory
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          if (!checked) {
+                            form.setValue("selectedItems", []);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {brand?.inventory?.enabled && form.watch("useInventory") && (
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Inventory Items</h4>
+                <div className="space-y-2">
+                  {brand.inventory.items?.map((item) => {
+                    const selectedItem = form.watch("selectedItems")?.find(i => i.id === item.id);
+                    const isSelected = !!selectedItem;
+                    
+                    return (
+                      <div 
+                        key={item.id} 
+                        className={`p-3 border rounded-lg ${isSelected ? 'border-primary bg-primary/5' : 'border-border'}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {item.price.toFixed(2)} {form.watch("currency")}
+                              {item.description && ` • ${item.description}`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isSelected ? (
+                              <>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleQuantityChange(item.id, (selectedItem?.quantity || 1) - 1)}
+                                  disabled={!selectedItem?.quantity}
+                                >
+                                  -
+                                </Button>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={selectedItem?.quantity || 0}
+                                  onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                                  className="w-16 text-center"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleQuantityChange(item.id, (selectedItem?.quantity || 0) + 1)}
+                                >
+                                  +
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleItemSelection(item)}
+                              >
+                                Add
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {form.watch("selectedItems")?.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <div className="flex justify-between font-medium">
+                      <span>Total:</span>
+                      <span>
+                        {form.watch("amount")} {form.watch("currency")}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {(!brand?.inventory?.enabled || !form.watch("useInventory")) && (
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="0.1" 
+                        type="number" 
+                        step="any" 
+                        {...field} 
+                        disabled={form.watch("useInventory")}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <Button type="submit" className="w-full" disabled={isCreating}>
               {isCreating ? (
