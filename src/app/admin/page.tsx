@@ -13,12 +13,14 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +33,8 @@ import {
   DollarSign,
   Activity,
   FileText,
-  CreditCard
+  CreditCard,
+  Trash2
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { WalletManagement } from "@/components/wallet-management";
@@ -79,6 +82,9 @@ export default function MasterAdminPage() {
     description: ''
   });
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -124,6 +130,36 @@ export default function MasterAdminPage() {
     } finally {
       setCreating(false);
     }
+  }
+
+  async function deleteCompany() {
+    if (!companyToDelete) return;
+    
+    setDeleting(companyToDelete.slug);
+    try {
+      const res = await fetch(`/api/admin/companies?slug=${companyToDelete.slug}`, {
+        method: 'DELETE'
+      });
+      
+      if (res.ok) {
+        setShowDeleteDialog(false);
+        setCompanyToDelete(null);
+        loadDashboardData(); // Refresh data
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete company');
+      }
+    } catch (error) {
+      console.error('Failed to delete company:', error);
+      alert('Failed to delete company');
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  function handleDeleteClick(company: Company) {
+    setCompanyToDelete(company);
+    setShowDeleteDialog(true);
   }
 
   if (loading) {
@@ -326,10 +362,12 @@ export default function MasterAdminPage() {
                       {company.lastActivity ? new Date(company.lastActivity).toLocaleDateString() : 'Never'}
                     </TableCell>
                     <TableCell>
+                      <div className="flex gap-1">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => router.push(`/admin/companies/${company.slug}`)}
+                          title="View Analytics"
                         >
                           <BarChart3 className="h-4 w-4" />
                         </Button>
@@ -337,6 +375,7 @@ export default function MasterAdminPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => router.push(`/c/${company.slug}`)}
+                          title="View Company"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -344,9 +383,20 @@ export default function MasterAdminPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => router.push(`/admin/brands/${company.slug}`)}
+                          title="Edit Settings"
                         >
                           <Settings className="h-4 w-4" />
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteClick(company)}
+                          title="Delete Company"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -354,6 +404,53 @@ export default function MasterAdminPage() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Company</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete <strong>{companyToDelete?.name}</strong>? 
+                This action cannot be undone and will permanently delete:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Company brand configuration</li>
+                  <li>All company data and invoices</li>
+                  <li>All associated files</li>
+                </ul>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setCompanyToDelete(null);
+                }}
+                disabled={!!deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={deleteCompany}
+                disabled={!!deleting}
+              >
+                {deleting ? (
+                  <>
+                    <Spinner className="h-4 w-4 mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Company
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Recent Activity */}
         {stats?.recentActivity && stats.recentActivity.length > 0 && (
