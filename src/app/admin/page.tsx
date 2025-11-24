@@ -34,6 +34,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { WalletManagement } from "@/components/wallet-management";
 
 interface Company {
   id: string;
@@ -204,6 +205,11 @@ export default function MasterAdminPage() {
       </header>
 
       <main className="container mx-auto px-6 py-8">
+        {/* Wallet Management */}
+        <div className="mb-8">
+          <WalletManagement />
+        </div>
+
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
