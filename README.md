@@ -48,27 +48,58 @@ Zyra is a comprehensive invoice management platform that supports multiple payme
 - **Crypto Payments**: [thirdweb Payments](https://portal.thirdweb.com/payments)
 - **Mobile Money**: Paystack API integration
 - **Wallet Connection**: Thirdweb Connect Button
-- **Storage**: File-based invoice storage system
+- **Database**: Firebase Firestore
 
 ## Getting Started
 
 1. Clone the repository
 2. Install dependencies: `npm install`
-3. Set up environment variables:
+3. Set up Firebase Firestore (see [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for detailed instructions)
+4. Set up environment variables:
+   - `FIREBASE_PROJECT_ID`: Your Firebase project ID
+   - `FIREBASE_PRIVATE_KEY`: Your Firebase service account private key
+   - `FIREBASE_CLIENT_EMAIL`: Your Firebase service account email
    - `THIRDWEB_SECRET_KEY`: Your Thirdweb secret key
    - `PAYSTACK_SECRET_KEY`: Your Paystack secret key
    - `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY`: Your Paystack public key
-4. Run the development server: `npm run dev`
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Run the development server: `npm run dev`
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Environment Variables
 
 ```env
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour private key here\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project-id.iam.gserviceaccount.com
+
+# Thirdweb Configuration
 THIRDWEB_SECRET_KEY=your_thirdweb_secret_key
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_thirdweb_client_id
+
+# Paystack Configuration
 PAYSTACK_SECRET_KEY=your_paystack_secret_key
 NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=your_paystack_public_key
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
+# WhatsApp Configuration (Optional)
+WHATSAPP_ACCESS_TOKEN=your_whatsapp_access_token
+WHATSAPP_PHONE_NUMBER_ID=your_whatsapp_phone_number_id
+WHATSAPP_ENABLED=false
+WHATSAPP_VERIFY_WEBHOOK=false
+WHATSAPP_WEBHOOK_SECRET=your_webhook_secret
 ```
+
+See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for detailed Firebase setup instructions.
+
+## Testing Firebase Connection
+
+After setting up Firebase, test the connection by visiting:
+```
+http://localhost:3000/api/test-firebase
+```
+
+This will verify that your Firebase configuration is correct. See [HOW_TO_TEST_FIREBASE.md](./HOW_TO_TEST_FIREBASE.md) for detailed testing instructions.
 
 ## Payment Methods Supported
 
