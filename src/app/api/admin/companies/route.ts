@@ -220,3 +220,54 @@ async function getCryptoInvoices(_slug: string) {
     }>;
   }
 }
+
+// Delete a company
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const slug = searchParams.get('slug');
+
+    if (!slug) {
+      return NextResponse.json(
+        { error: 'Company slug is required' },
+        { status: 400 }
+      );
+    }
+
+    const brandsDir = path.join(process.cwd(), 'public', 'brands');
+    const companyDir = path.join(brandsDir, slug);
+
+    // Check if company exists
+    try {
+      await fs.access(companyDir);
+    } catch {
+      return NextResponse.json(
+        { error: 'Company not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete company directory and all its contents
+    await fs.rm(companyDir, { recursive: true, force: true });
+
+    // Also delete company data directory if it exists
+    const dataDir = path.join(process.cwd(), 'data', 'companies', slug);
+    try {
+      await fs.access(dataDir);
+      await fs.rm(dataDir, { recursive: true, force: true });
+    } catch {
+      // Data directory doesn't exist, which is fine
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Company ${slug} deleted successfully`
+    });
+  } catch (error) {
+    console.error('Error deleting company:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete company' },
+      { status: 500 }
+    );
+  }
+}
