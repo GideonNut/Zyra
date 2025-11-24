@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { saveInvoice } from '@/lib/invoice-storage';
 import { saveCompanyInvoice } from '@/lib/company-invoice-storage';
 import { whatsappService } from '@/lib/whatsapp-service';
-import path from 'path';
-import { promises as fs } from 'fs';
+import { getBrandBySlug } from '@/lib/brand-storage';
 import { getWhatsAppConfig } from '@/lib/whatsapp-config';
 
 export async function POST(request: NextRequest) {
@@ -57,13 +56,14 @@ export async function POST(request: NextRequest) {
           try {
             const companySlug: string | undefined = data.metadata?.company_slug || undefined;
             if (companySlug) {
-              // try load brand config
-              const brandPath = path.join(process.cwd(), 'public', 'brands', companySlug, 'brand.json');
+              // try load brand config from Firestore
               try {
-                const json = await fs.readFile(brandPath, 'utf-8');
-                const brand = JSON.parse(json) as { whatsapp?: { enabled?: boolean; accessToken?: string; phoneNumberId?: string } };
-                if (brand.whatsapp?.enabled) {
-                  const creds = { accessToken: brand.whatsapp.accessToken, phoneNumberId: brand.whatsapp.phoneNumberId };
+                const brand = await getBrandBySlug(companySlug);
+                if (brand?.whatsapp?.enabled && brand.whatsapp.accessToken && brand.whatsapp.phoneNumberId) {
+                  const creds = { 
+                    accessToken: brand.whatsapp.accessToken, 
+                    phoneNumberId: brand.whatsapp.phoneNumberId 
+                  };
                   const ok = await whatsappService.sendPaymentSuccessNotificationWithCredentials(
                     creds,
                     phoneNumber,
