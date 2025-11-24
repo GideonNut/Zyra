@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import * as XLSX from "xlsx";
-import { Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { Upload, FileSpreadsheet, AlertCircle, ArrowLeft } from "lucide-react";
 
 interface InventoryItem {
   id: string;
@@ -248,7 +248,16 @@ export default function BrandEditorPage() {
     <div className="min-h-screen p-8 bg-background">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Edit Brand: {brand.name || slug}</h1>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push('/admin')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-2xl font-bold">Edit Brand: {brand.name || slug}</h1>
+          </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => window.open(`/c/${slug}`, "_blank")}>Open /c/{slug}</Button>
             <Button onClick={onSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
