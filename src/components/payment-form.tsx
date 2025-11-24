@@ -20,9 +20,7 @@ import { toUnits } from "thirdweb";
 import { TokenSelector } from "@/components/ui/token-selector";
 import { SingleNetworkSelector } from "@/components/ui/network-selector";
 import { client } from "@/lib/constants";
-import { useBrand } from "@/contexts/brand-context";
-import { Switch } from "@/components/ui/switch";
-import { InventoryItem } from "@/contexts/brand-context";
+import { useBrand, InventoryItem } from "@/contexts/brand-context";
 
 // Extend Window interface for Paystack
 declare global {
@@ -52,7 +50,6 @@ const formSchema = z.object({
   currency: z.enum(["GHS", "USD", "CRYPTO"]).default("GHS"),
   paymentMethod: z.enum(["mobile_money", "crypto"]).default("mobile_money"),
   description: z.string().optional(),
-  useInventory: z.boolean().default(false),
   selectedItems: z.array(z.object({
     id: z.string(),
     name: z.string(),
@@ -96,24 +93,22 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
       currency: "GHS",
       paymentMethod: "mobile_money",
       description: "",
-      useInventory: false,
       selectedItems: [],
     },
   });
 
-  // Calculate total from selected items
+  // Calculate total from selected items when inventory is enabled
   const watchSelectedItems = form.watch("selectedItems");
-  const watchUseInventory = form.watch("useInventory");
   
   useEffect(() => {
-    if (watchUseInventory) {
+    if (brand?.inventory?.enabled && watchSelectedItems && watchSelectedItems.length > 0) {
       const total = watchSelectedItems.reduce(
         (sum, item) => sum + (item.price * item.quantity),
         0
       );
       form.setValue("amount", total.toFixed(2));
     }
-  }, [watchSelectedItems, watchUseInventory, form]);
+  }, [watchSelectedItems, brand?.inventory?.enabled, form]);
 
   // Handle inventory item quantity change
   const handleQuantityChange = (itemId: string, quantity: number) => {
@@ -156,8 +151,8 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
   async function onSubmit(values: FormValues) {
     setIsCreating(true);
     try {
-      // Validate inventory items if using inventory
-      if (values.useInventory) {
+      // Validate inventory items if inventory is enabled
+      if (brand?.inventory?.enabled) {
         const hasItems = values.selectedItems && values.selectedItems.length > 0;
         if (!hasItems) {
           alert("Please select at least one item from inventory");
@@ -339,7 +334,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                         }}
                         className="flex-1"
                       >
-                        📱 Mobile Money
+                        Mobile Money
                       </Button>
                       <Button
                         type="button"
@@ -350,7 +345,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                         }}
                         className="flex-1"
                       >
-                        ₿ Crypto
+                        Crypto
                       </Button>
                     </div>
                   </FormControl>
@@ -440,113 +435,182 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
             )}
 
             {brand?.inventory?.enabled && (
-              <FormField
-                control={form.control}
-                name="useInventory"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Use Inventory</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        Select items from your inventory
-                      </p>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={(checked) => {
-                          field.onChange(checked);
-                          if (!checked) {
-                            form.setValue("selectedItems", []);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {brand?.inventory?.enabled && form.watch("useInventory") && (
               <div className="space-y-4">
-                <h4 className="text-sm font-medium">Inventory Items</h4>
-                <div className="space-y-2">
-                  {brand.inventory.items?.map((item) => {
-                    const selectedItem = form.watch("selectedItems")?.find(i => i.id === item.id);
-                    const isSelected = !!selectedItem;
-                    
-                    return (
-                      <div 
-                        key={item.id} 
-                        className={`p-3 border rounded-lg ${isSelected ? 'border-primary bg-primary/5' : 'border-border'}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {item.price.toFixed(2)} {form.watch("currency")}
-                              {item.description && ` • ${item.description}`}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {isSelected ? (
-                              <>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleQuantityChange(item.id, (selectedItem?.quantity || 1) - 1)}
-                                  disabled={!selectedItem?.quantity}
-                                >
-                                  -
-                                </Button>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={selectedItem?.quantity || 0}
-                                  onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
-                                  className="w-16 text-center"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleQuantityChange(item.id, (selectedItem?.quantity || 0) + 1)}
-                                >
-                                  +
-                                </Button>
-                              </>
-                            ) : (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => toggleItemSelection(item)}
-                              >
-                                Add
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium">Select Items from Inventory</h4>
+                  {form.watch("selectedItems")?.length > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {form.watch("selectedItems")?.length} item(s) selected
+                    </span>
+                  )}
                 </div>
                 
-                {form.watch("selectedItems")?.length > 0 && (
-                  <div className="pt-2 border-t">
-                    <div className="flex justify-between font-medium">
-                      <span>Total:</span>
-                      <span>
-                        {form.watch("amount")} {form.watch("currency")}
-                      </span>
+                {brand.inventory.items && brand.inventory.items.length > 0 ? (
+                  <>
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                      {brand.inventory.items.map((item) => {
+                        const selectedItem = form.watch("selectedItems")?.find(i => i.id === item.id);
+                        const isSelected = !!selectedItem;
+                        const itemTotal = isSelected ? (selectedItem.quantity * item.price) : 0;
+                        const availableStock = item.quantity || 0;
+                        
+                        return (
+                          <div 
+                            key={item.id} 
+                            className={`p-4 border rounded-lg transition-colors ${
+                              isSelected 
+                                ? 'border-primary bg-primary/5 shadow-sm' 
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              {item.imageUrl && (
+                                <div className="w-16 h-16 rounded-md overflow-hidden border border-border flex-shrink-0">
+                                  <img 
+                                    src={item.imageUrl} 
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm">{item.name}</p>
+                                    {item.description && (
+                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                        {item.description}
+                                      </p>
+                                    )}
+                                    <div className="flex items-center gap-3 mt-2">
+                                      <span className="text-sm font-semibold">
+                                        {form.watch("currency") === "CRYPTO" ? "Crypto" : form.watch("currency")} {item.price.toFixed(2)}
+                                      </span>
+                                      {item.sku && (
+                                        <span className="text-xs text-muted-foreground">
+                                          SKU: {item.sku}
+                                        </span>
+                                      )}
+                                      {availableStock > 0 && (
+                                        <span className="text-xs text-muted-foreground">
+                                          Stock: {availableStock}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center justify-between mt-3">
+                                  {isSelected ? (
+                                    <>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleQuantityChange(item.id, (selectedItem?.quantity || 1) - 1)}
+                                          disabled={!selectedItem?.quantity || selectedItem.quantity <= 0}
+                                          className="h-8 w-8 p-0"
+                                        >
+                                          -
+                                        </Button>
+                                        <Input
+                                          type="number"
+                                          min="0"
+                                          max={availableStock > 0 ? availableStock : undefined}
+                                          value={selectedItem?.quantity || 0}
+                                          onChange={(e) => {
+                                            const qty = parseInt(e.target.value) || 0;
+                                            const maxQty = availableStock > 0 ? availableStock : undefined;
+                                            handleQuantityChange(item.id, maxQty ? Math.min(qty, maxQty) : qty);
+                                          }}
+                                          className="w-20 text-center h-8"
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            const currentQty = selectedItem?.quantity || 0;
+                                            const maxQty = availableStock > 0 ? availableStock : undefined;
+                                            handleQuantityChange(item.id, maxQty ? Math.min(currentQty + 1, maxQty) : currentQty + 1);
+                                          }}
+                                          disabled={availableStock > 0 && (selectedItem?.quantity || 0) >= availableStock}
+                                          className="h-8 w-8 p-0"
+                                        >
+                                          +
+                                        </Button>
+                                        {availableStock > 0 && (selectedItem?.quantity || 0) >= availableStock && (
+                                          <span className="text-xs text-destructive ml-2">
+                                            Max stock reached
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-xs text-muted-foreground">Subtotal</p>
+                                        <p className="text-sm font-semibold">
+                                          {form.watch("currency") === "CRYPTO" ? "Crypto" : form.watch("currency")} {itemTotal.toFixed(2)}
+                                        </p>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <Button
+                                      type="button"
+                                      variant={availableStock === 0 ? "secondary" : "outline"}
+                                      size="sm"
+                                      onClick={() => toggleItemSelection(item)}
+                                      disabled={availableStock === 0}
+                                      className="w-full"
+                                    >
+                                      {availableStock === 0 ? "Out of Stock" : "Add to Invoice"}
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
+                    
+                    {form.watch("selectedItems")?.length > 0 && (
+                      <div className="pt-4 border-t space-y-2">
+                        <div className="space-y-1">
+                          {form.watch("selectedItems")?.map((selectedItem) => {
+                            const item = brand.inventory?.items?.find(i => i.id === selectedItem.id);
+                            if (!item) return null;
+                            return (
+                              <div key={selectedItem.id} className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                  {item.name} × {selectedItem.quantity}
+                                </span>
+                                <span>
+                                  {form.watch("currency") === "CRYPTO" ? "Crypto" : form.watch("currency")} {(selectedItem.quantity * item.price).toFixed(2)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-between items-center pt-2 border-t font-semibold">
+                          <span>Total Amount:</span>
+                          <span className="text-lg">
+                            {form.watch("currency") === "CRYPTO" ? "Crypto" : form.watch("currency")} {form.watch("amount")}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 border border-dashed rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      No inventory items available. Please add items in the admin panel.
+                    </p>
                   </div>
                 )}
               </div>
             )}
 
-            {(!brand?.inventory?.enabled || !form.watch("useInventory")) && (
+            {(!brand?.inventory?.enabled || form.watch("selectedItems")?.length === 0) && (
               <FormField
                 control={form.control}
                 name="amount"
@@ -559,7 +623,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                         type="number" 
                         step="any" 
                         {...field} 
-                        disabled={form.watch("useInventory")}
+                        disabled={form.watch("selectedItems")?.length > 0}
                       />
                     </FormControl>
                     <FormMessage />
