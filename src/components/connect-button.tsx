@@ -34,6 +34,7 @@ export function ConnectButton({
   const [verificationCode, setVerificationCode] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
 
   const handleConnect = () => {
     if (isEmailSignIn) {
@@ -63,8 +64,9 @@ export function ConnectButton({
   };
 
   const handleSendCode = async () => {
-    if (!email) return;
+    if (!email || sendingCode || codeSent) return;
     
+    setSendingCode(true);
     try {
       await preAuthenticate({
         client,
@@ -74,6 +76,8 @@ export function ConnectButton({
       setCodeSent(true);
     } catch (error) {
       console.error("Failed to send verification code:", error);
+    } finally {
+      setSendingCode(false);
     }
   };
 
@@ -108,12 +112,12 @@ export function ConnectButton({
         {!codeSent ? (
           <Button
             onClick={handleSendCode}
-            disabled={!email}
+            disabled={!email || sendingCode}
             variant={variant}
             size={size}
             className={cn(className, "w-full")}
           >
-            Send Verification Code
+            {sendingCode ? "Sending..." : "Send Verification Code"}
           </Button>
         ) : (
           <>
@@ -135,14 +139,20 @@ export function ConnectButton({
                 {isConnecting ? "Connecting..." : "Sign In"}
               </Button>
               <Button
-                onClick={() => {
+                onClick={async () => {
                   setCodeSent(false);
                   setVerificationCode("");
+                  // Wait a moment before allowing resend to prevent double sends
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                  if (email) {
+                    await handleSendCode();
+                  }
                 }}
                 variant="outline"
                 size={size}
+                disabled={sendingCode}
               >
-                Resend
+                {sendingCode ? "Sending..." : "Resend"}
               </Button>
             </div>
           </>
@@ -151,12 +161,14 @@ export function ConnectButton({
           onClick={() => {
             setShowEmailForm(false);
             setCodeSent(false);
+            setSendingCode(false);
             setEmail("");
             setVerificationCode("");
           }}
           variant="outline"
           size={size}
           className="w-full"
+          disabled={sendingCode}
         >
           Cancel
         </Button>
