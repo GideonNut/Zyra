@@ -34,7 +34,8 @@ import {
   Activity,
   FileText,
   CreditCard,
-  Trash2
+  Trash2,
+  ArrowLeft
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { WalletManagement } from "@/components/wallet-management";
@@ -179,6 +180,14 @@ export default function MasterAdminPage() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push('/')}
+                className="mr-2"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
               <Building2 className="h-8 w-8 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold">Master Admin Panel</h1>
