@@ -1,50 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getAllBrands, getBrandBySlug } from '@/lib/brand-storage';
+import { getAllCompanyInvoices } from '@/lib/company-invoice-storage';
 
 // Get all companies
 export async function GET() {
   try {
-    const brandsDir = path.join(process.cwd(), 'public', 'brands');
+    const brands = await getAllBrands();
     const companies = [];
 
-    try {
-      const entries = await fs.readdir(brandsDir, { withFileTypes: true });
-      
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          const brandPath = path.join(brandsDir, entry.name, 'brand.json');
-          try {
-            const brandData = await fs.readFile(brandPath, 'utf-8');
-            const brand = JSON.parse(brandData);
-            
-            // Get company stats
-            const stats = await getCompanyStats(entry.name);
-            
-            companies.push({
-              id: brand.id,
-              name: brand.name,
-              slug: entry.name,
-              createdAt: new Date().toISOString(), // We don't track this yet
-              lastActivity: stats.lastActivity,
-              totalInvoices: stats.totalInvoices,
-              totalRevenue: stats.totalRevenue,
-              paymentMethods: {
-                crypto: true, // Assume crypto is always available
-                mobileMoney: !!brand.payment?.paystackPublicKey
-              },
-              whatsapp: {
-                enabled: !!brand.whatsapp?.enabled
-              },
-              status: 'active' // Default to active
-            });
-          } catch (error) {
-            console.error(`Error reading brand ${entry.name}:`, error);
-          }
-        }
+    for (const brand of brands) {
+      try {
+        // Get company stats
+        const stats = await getCompanyStats(brand.slug);
+        
+        companies.push({
+          id: brand.id,
+          name: brand.name,
+          slug: brand.slug,
+          createdAt: brand.createdAt || new Date().toISOString(),
+          lastActivity: stats.lastActivity,
+          totalInvoices: stats.totalInvoices,
+          totalRevenue: stats.totalRevenue,
+          paymentMethods: {
+            crypto: true, // Assume crypto is always available
+            mobileMoney: !!brand.payment?.paystackPublicKey
+          },
+          whatsapp: {
+            enabled: !!brand.whatsapp?.enabled
+          },
+          status: 'active' // Default to active
+        });
+      } catch (error) {
+        console.error(`Error processing brand ${brand.slug}:`, error);
       }
-    } catch (error) {
-      console.error('Error reading brands directory:', error);
     }
 
     return NextResponse.json(companies);
@@ -78,28 +66,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const brandsDir = path.join(process.cwd(), 'public', 'brands');
-    const companyDir = path.join(brandsDir, slug);
-    const brandPath = path.join(companyDir, 'brand.json');
-
     // Check if company already exists
-    try {
-      await fs.access(brandPath);
+    const existing = await getBrandBySlug(slug);
+    if (existing) {
       return NextResponse.json(
         { error: 'Company with this slug already exists' },
         { status: 409 }
       );
-    } catch {
-      // Company doesn't exist, which is what we want
     }
-
-    // Create company directory
-    await fs.mkdir(companyDir, { recursive: true });
 
     // Create default brand configuration
     const brandConfig = {
       id: slug,
       name: name,
+      slug: slug,
       assets: {
         logo: {
           light: `/brands/${slug}/logo.png`,
@@ -124,16 +104,17 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    // Write brand configuration
-    await fs.writeFile(brandPath, JSON.stringify(brandConfig, null, 2));
+    // Save brand to Firestore
+    const { saveBrand } = await import('@/lib/brand-storage');
+    const savedBrand = await saveBrand(brandConfig);
 
     return NextResponse.json({
       success: true,
       company: {
-        id: slug,
-        name: name,
-        slug: slug,
-        createdAt: new Date().toISOString(),
+        id: savedBrand.id,
+        name: savedBrand.name,
+        slug: savedBrand.slug,
+        createdAt: savedBrand.createdAt || new Date().toISOString(),
         status: 'active'
       }
     });
@@ -150,13 +131,13 @@ export async function POST(request: NextRequest) {
 async function getCompanyStats(slug: string) {
   try {
     // Get mobile money invoices
-    const mobileMoneyInvoices = await getMobileMoneyInvoices(slug);
+    const mobileMoneyInvoices = await getAllCompanyInvoices(slug);
     
     // Get crypto invoices (this would need to be implemented based on your storage)
-    const cryptoInvoices = await getCryptoInvoices(slug);
+    const cryptoInvoices = await getCryptoInvoices();
     
     const totalInvoices = mobileMoneyInvoices.length + cryptoInvoices.length;
-    const totalRevenue = mobileMoneyInvoices.reduce((sum, invoice) => sum + (invoice.amount || 0), 0) +
+    const totalRevenue = mobileMoneyInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || '0'), 0) +
                         cryptoInvoices.reduce((sum, invoice) => sum + (invoice.amountUsd || 0), 0);
     
     const lastActivity = [...mobileMoneyInvoices, ...cryptoInvoices]
@@ -177,29 +158,8 @@ async function getCompanyStats(slug: string) {
   }
 }
 
-// Helper function to get mobile money invoices
-async function getMobileMoneyInvoices(slug: string) {
-  try {
-    const invoicesDir = path.join(process.cwd(), 'data', 'companies', slug, 'mobile-money', 'invoices');
-    const files = await fs.readdir(invoicesDir);
-    
-    const invoices = [];
-    for (const file of files) {
-      if (file.endsWith('.json')) {
-        const filePath = path.join(invoicesDir, file);
-        const data = await fs.readFile(filePath, 'utf-8');
-        invoices.push(JSON.parse(data));
-      }
-    }
-    
-    return invoices;
-  } catch {
-    return [];
-  }
-}
-
 // Helper function to get crypto invoices
-async function getCryptoInvoices(_slug: string) {
+async function getCryptoInvoices() {
   try {
     // This would need to be implemented based on how you store crypto invoices
     // For now, return empty array with proper typing
@@ -234,30 +194,19 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const brandsDir = path.join(process.cwd(), 'public', 'brands');
-    const companyDir = path.join(brandsDir, slug);
+    // Check if company exists and delete from Firestore
+    const { deleteBrand } = await import('@/lib/brand-storage');
+    const deleted = await deleteBrand(slug);
 
-    // Check if company exists
-    try {
-      await fs.access(companyDir);
-    } catch {
+    if (!deleted) {
       return NextResponse.json(
         { error: 'Company not found' },
         { status: 404 }
       );
     }
 
-    // Delete company directory and all its contents
-    await fs.rm(companyDir, { recursive: true, force: true });
-
-    // Also delete company data directory if it exists
-    const dataDir = path.join(process.cwd(), 'data', 'companies', slug);
-    try {
-      await fs.access(dataDir);
-      await fs.rm(dataDir, { recursive: true, force: true });
-    } catch {
-      // Data directory doesn't exist, which is fine
-    }
+    // Note: Company invoices will remain in Firestore but can be cleaned up separately if needed
+    // You may want to add a function to delete all company invoices when deleting a company
 
     return NextResponse.json({
       success: true,
