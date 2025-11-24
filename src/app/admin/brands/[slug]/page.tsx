@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import * as XLSX from "xlsx";
+import { Upload, FileSpreadsheet, AlertCircle } from "lucide-react";
 
 interface InventoryItem {
   id: string;
@@ -43,6 +45,9 @@ export default function BrandEditorPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +90,138 @@ export default function BrandEditorPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleExcelUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(null);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result;
+        if (!data) {
+          throw new Error("Failed to read file");
+        }
+
+        // Parse Excel file
+        const workbook = XLSX.read(data, { type: "binary" });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+          header: 1,
+          defval: ""
+        }) as (string | number)[][];
+
+        if (jsonData.length < 2) {
+          throw new Error("Excel file must have at least a header row and one data row");
+        }
+
+        // Get header row (first row)
+        const headers = jsonData[0].map((h: string | number) => String(h).toLowerCase().trim());
+        
+        // Find column indices
+        const nameIndex = headers.findIndex(h => 
+          h.includes("name") || h.includes("item") || h.includes("product")
+        );
+        const priceIndex = headers.findIndex(h => 
+          h.includes("price") || h.includes("cost") || h.includes("amount")
+        );
+        const quantityIndex = headers.findIndex(h => 
+          h.includes("quantity") || h.includes("qty") || h.includes("stock")
+        );
+        const descriptionIndex = headers.findIndex(h => 
+          h.includes("description") || h.includes("desc") || h.includes("details")
+        );
+        const skuIndex = headers.findIndex(h => 
+          h.includes("sku") || h.includes("code") || h.includes("id")
+        );
+        const imageIndex = headers.findIndex(h => 
+          h.includes("image") || h.includes("photo") || h.includes("url")
+        );
+
+        if (nameIndex === -1 || priceIndex === -1) {
+          throw new Error("Excel file must have 'Name' and 'Price' columns");
+        }
+
+        // Parse data rows
+        const newItems: InventoryItem[] = [];
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          const name = String(row[nameIndex] || "").trim();
+          const priceStr = String(row[priceIndex] || "0").trim();
+          
+          // Skip empty rows
+          if (!name) continue;
+
+          const price = parseFloat(priceStr.replace(/[^0-9.-]/g, "")) || 0;
+          const quantity = quantityIndex !== -1 
+            ? parseInt(String(row[quantityIndex] || "0").trim()) || 0 
+            : 0;
+          const description = descriptionIndex !== -1 
+            ? String(row[descriptionIndex] || "").trim() 
+            : undefined;
+          const sku = skuIndex !== -1 
+            ? String(row[skuIndex] || "").trim() 
+            : undefined;
+          const imageUrl = imageIndex !== -1 
+            ? String(row[imageIndex] || "").trim() 
+            : undefined;
+
+          newItems.push({
+            id: `item-${Date.now()}-${i}`,
+            name,
+            price,
+            quantity,
+            description: description || undefined,
+            sku: sku || undefined,
+            imageUrl: imageUrl || undefined,
+          });
+        }
+
+        if (newItems.length === 0) {
+          throw new Error("No valid items found in Excel file");
+        }
+
+        // Add new items to existing inventory
+        if (!brand) {
+          setUploadError("Brand data not loaded");
+          return;
+        }
+        
+        const existingItems = brand.inventory?.items || [];
+        setBrand({
+          ...brand,
+          inventory: {
+            ...brand.inventory!,
+            items: [...existingItems, ...newItems]
+          }
+        });
+
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to parse Excel file";
+        setUploadError(message);
+        console.error("Excel upload error:", err);
+      } finally {
+        setUploading(false);
+      }
+    };
+
+    reader.onerror = () => {
+      setUploadError("Failed to read file");
+      setUploading(false);
+    };
+
+    reader.readAsBinaryString(file);
   }
 
   if (loading) {
@@ -389,27 +526,77 @@ export default function BrandEditorPage() {
               <div className="mt-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="font-medium">Inventory Items</h3>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => {
-                      const newItem: InventoryItem = {
-                        id: `item-${Date.now()}`,
-                        name: '',
-                        price: 0,
-                        quantity: 0
-                      };
-                      setBrand({
-                        ...brand,
-                        inventory: {
-                          ...brand.inventory!,
-                          items: [...(brand.inventory?.items || []), newItem]
-                        }
-                      });
-                    }}
-                  >
-                    + Add Item
-                  </Button>
+                  <div className="flex gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      onChange={handleExcelUpload}
+                      className="hidden"
+                      id="excel-upload"
+                      disabled={uploading}
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <>
+                          <FileSpreadsheet className="h-4 w-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload Excel
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        const newItem: InventoryItem = {
+                          id: `item-${Date.now()}`,
+                          name: '',
+                          price: 0,
+                          quantity: 0
+                        };
+                        setBrand({
+                          ...brand,
+                          inventory: {
+                            ...brand.inventory!,
+                            items: [...(brand.inventory?.items || []), newItem]
+                          }
+                        });
+                      }}
+                    >
+                      + Add Item
+                    </Button>
+                  </div>
+                </div>
+
+                {uploadError && (
+                  <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{uploadError}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={() => setUploadError(null)}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                )}
+
+                <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                  <p className="font-medium mb-1">Excel File Format:</p>
+                  <p>Your Excel file should have columns: <strong>Name</strong> (required), <strong>Price</strong> (required), <strong>Quantity</strong>, <strong>Description</strong>, <strong>SKU</strong>, <strong>Image URL</strong></p>
+                  <p className="mt-1 text-xs">Column names are case-insensitive and can include variations like &quot;Item Name&quot;, &quot;Product&quot;, &quot;Cost&quot;, &quot;Qty&quot;, etc.</p>
                 </div>
 
                 <div className="space-y-4">
