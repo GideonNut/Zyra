@@ -1,5 +1,4 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getFirestoreInstance, COLLECTIONS } from './firestore';
 
 export interface CompanyMobileMoneyInvoice {
   id: string;
@@ -13,50 +12,44 @@ export interface CompanyMobileMoneyInvoice {
   paid_at: string;
   createdAt: string;
   metadata: Record<string, unknown>;
-}
-
-function baseDir(slug: string) {
-  return path.join(process.cwd(), 'data', 'companies', slug);
-}
-
-function invoicesDir(slug: string) {
-  return path.join(baseDir(slug), 'mobile-money', 'invoices');
-}
-
-async function ensureDir(p: string) {
-  try {
-    await fs.access(p);
-  } catch {
-    await fs.mkdir(p, { recursive: true });
-  }
+  companySlug: string;
 }
 
 export async function getAllCompanyInvoices(slug: string): Promise<CompanyMobileMoneyInvoice[]> {
-  const dir = invoicesDir(slug);
   try {
-    await ensureDir(dir);
-    const files = await fs.readdir(dir);
-    const results: CompanyMobileMoneyInvoice[] = [];
-    for (const f of files) {
-      if (!f.endsWith('.json')) continue;
-      const content = await fs.readFile(path.join(dir, f), 'utf-8');
-      results.push(JSON.parse(content));
-    }
-    // sort newest first
-    results.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-    return results;
-  } catch {
+    const db = getFirestoreInstance();
+    const snapshot = await db.collection(COLLECTIONS.COMPANY_INVOICES)
+      .where('companySlug', '==', slug)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as CompanyMobileMoneyInvoice[];
+  } catch (error) {
+    console.error('Error fetching company invoices from Firestore:', error);
     return [];
   }
 }
 
-export async function saveCompanyInvoice(slug: string, invoice: Omit<CompanyMobileMoneyInvoice, 'id' | 'createdAt'>): Promise<CompanyMobileMoneyInvoice> {
-  const dir = invoicesDir(slug);
-  await ensureDir(dir);
-  const id = `mobile_money_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-  const createdAt = new Date().toISOString();
-  const full: CompanyMobileMoneyInvoice = { ...invoice, id, createdAt };
-  const filePath = path.join(dir, `${id}.json`);
-  await fs.writeFile(filePath, JSON.stringify(full, null, 2), 'utf-8');
-  return full;
+export async function saveCompanyInvoice(slug: string, invoice: Omit<CompanyMobileMoneyInvoice, 'id' | 'createdAt' | 'companySlug'>): Promise<CompanyMobileMoneyInvoice> {
+  try {
+    const db = getFirestoreInstance();
+    const id = `mobile_money_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const createdAt = new Date().toISOString();
+    const full: CompanyMobileMoneyInvoice = { 
+      ...invoice, 
+      id, 
+      createdAt,
+      companySlug: slug,
+    };
+    
+    await db.collection(COLLECTIONS.COMPANY_INVOICES).doc(id).set(full);
+    
+    return full;
+  } catch (error) {
+    console.error('Error saving company invoice to Firestore:', error);
+    throw new Error('Failed to save company invoice');
+  }
 }
