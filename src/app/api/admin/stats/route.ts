@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getAllBrands } from '@/lib/brand-storage';
+import { getAllCompanyInvoices } from '@/lib/company-invoice-storage';
 
 export async function GET() {
   try {
-    const brandsDir = path.join(process.cwd(), 'public', 'brands');
+    const brands = await getAllBrands();
     let totalCompanies = 0;
     let activeCompanies = 0;
     let totalInvoices = 0;
@@ -16,46 +16,34 @@ export async function GET() {
       timestamp: string;
     }> = [];
 
-    try {
-      const entries = await fs.readdir(brandsDir, { withFileTypes: true });
-      
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          totalCompanies++;
-          
-          const brandPath = path.join(brandsDir, entry.name, 'brand.json');
-          try {
-            const brandData = await fs.readFile(brandPath, 'utf-8');
-            const brand = JSON.parse(brandData);
-            
-            // Consider company active if it has any configuration
-            if (brand.payment?.paystackPublicKey || brand.whatsapp?.enabled) {
-              activeCompanies++;
-            } else {
-              activeCompanies++; // For now, consider all companies active
-            }
-            
-            // Get company stats
-            const stats = await getCompanyStats(entry.name);
-            totalInvoices += stats.totalInvoices;
-            totalRevenue += stats.totalRevenue;
-            
-            // Add recent activity
-            if (stats.lastActivity) {
-              recentActivity.push({
-                id: `${entry.name}-${stats.lastActivity}`,
-                company: brand.name,
-                action: 'Last payment received',
-                timestamp: stats.lastActivity
-              });
-            }
-          } catch (error) {
-            console.error(`Error reading brand ${entry.name}:`, error);
-          }
+    for (const brand of brands) {
+      try {
+        totalCompanies++;
+        
+        // Consider company active if it has any configuration
+        if (brand.payment?.paystackPublicKey || brand.whatsapp?.enabled) {
+          activeCompanies++;
+        } else {
+          activeCompanies++; // For now, consider all companies active
         }
+        
+        // Get company stats
+        const stats = await getCompanyStats(brand.slug);
+        totalInvoices += stats.totalInvoices;
+        totalRevenue += stats.totalRevenue;
+        
+        // Add recent activity
+        if (stats.lastActivity) {
+          recentActivity.push({
+            id: `${brand.slug}-${stats.lastActivity}`,
+            company: brand.name,
+            action: 'Last payment received',
+            timestamp: stats.lastActivity
+          });
+        }
+      } catch (error) {
+        console.error(`Error processing brand ${brand.slug}:`, error);
       }
-    } catch (error) {
-      console.error('Error reading brands directory:', error);
     }
 
     // Sort recent activity by timestamp
@@ -81,13 +69,13 @@ export async function GET() {
 async function getCompanyStats(slug: string) {
   try {
     // Get mobile money invoices
-    const mobileMoneyInvoices = await getMobileMoneyInvoices(slug);
+    const mobileMoneyInvoices = await getAllCompanyInvoices(slug);
     
     // Get crypto invoices (this would need to be implemented based on your storage)
-    const cryptoInvoices = await getCryptoInvoices(slug);
+    const cryptoInvoices = await getCryptoInvoices();
     
     const totalInvoices = mobileMoneyInvoices.length + cryptoInvoices.length;
-    const totalRevenue = mobileMoneyInvoices.reduce((sum, invoice) => sum + (invoice.amount || 0), 0) +
+    const totalRevenue = mobileMoneyInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || '0'), 0) +
                         cryptoInvoices.reduce((sum, invoice) => sum + (invoice.amountUsd || 0), 0);
     
     const lastActivity = [...mobileMoneyInvoices, ...cryptoInvoices]
@@ -108,29 +96,8 @@ async function getCompanyStats(slug: string) {
   }
 }
 
-// Helper function to get mobile money invoices
-async function getMobileMoneyInvoices(slug: string) {
-  try {
-    const invoicesDir = path.join(process.cwd(), 'data', 'companies', slug, 'mobile-money', 'invoices');
-    const files = await fs.readdir(invoicesDir);
-    
-    const invoices = [];
-    for (const file of files) {
-      if (file.endsWith('.json')) {
-        const filePath = path.join(invoicesDir, file);
-        const data = await fs.readFile(filePath, 'utf-8');
-        invoices.push(JSON.parse(data));
-      }
-    }
-    
-    return invoices;
-  } catch {
-    return [];
-  }
-}
-
 // Helper function to get crypto invoices
-async function getCryptoInvoices(_slug: string) {
+async function getCryptoInvoices() {
   try {
     // This would need to be implemented based on how you store crypto invoices
     // For now, return empty array with proper typing
