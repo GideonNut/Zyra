@@ -123,11 +123,11 @@ export default function CompanyAnalyticsPage() {
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => router.push('/admin')}
                 className="mr-2"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-5 w-5" />
               </Button>
               <Building2 className="h-8 w-8 text-primary" />
               <div>
