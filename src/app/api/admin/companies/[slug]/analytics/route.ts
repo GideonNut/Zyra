@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { getBrandBySlug } from '@/lib/brand-storage';
+import { getAllCompanyInvoices } from '@/lib/company-invoice-storage';
 
 export async function GET(
   request: NextRequest,
@@ -9,14 +9,9 @@ export async function GET(
   try {
     const { slug } = await params;
     
-    // Load brand configuration
-    const brandPath = path.join(process.cwd(), 'public', 'brands', slug, 'brand.json');
-    let brand;
-    try {
-      const brandData = await fs.readFile(brandPath, 'utf-8');
-      brand = JSON.parse(brandData);
-    } catch (error) {
-      console.error(`Error reading brand ${slug}:`, error);
+    // Load brand configuration from Firestore
+    const brand = await getBrandBySlug(slug);
+    if (!brand) {
       return NextResponse.json(
         { error: 'Company not found' },
         { status: 404 }
@@ -36,7 +31,7 @@ export async function GET(
       id: brand.id,
       name: brand.name,
       slug: slug,
-      createdAt: new Date().toISOString(), // We don't track this yet
+      createdAt: brand.createdAt || new Date().toISOString(),
       lastActivity: stats.lastActivity,
       totalInvoices: stats.totalInvoices,
       totalRevenue: stats.totalRevenue,
@@ -66,13 +61,13 @@ export async function GET(
 async function getCompanyStats(slug: string) {
   try {
     // Get mobile money invoices
-    const mobileMoneyInvoices = await getMobileMoneyInvoices(slug);
+    const mobileMoneyInvoices = await getAllCompanyInvoices(slug);
     
     // Get crypto invoices (this would need to be implemented based on your storage)
-    const cryptoInvoices = await getCryptoInvoices(slug);
+    const cryptoInvoices = await getCryptoInvoices();
     
     const totalInvoices = mobileMoneyInvoices.length + cryptoInvoices.length;
-    const totalRevenue = mobileMoneyInvoices.reduce((sum, invoice) => sum + (invoice.amount || 0), 0) +
+    const totalRevenue = mobileMoneyInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || '0'), 0) +
                         cryptoInvoices.reduce((sum, invoice) => sum + (invoice.amountUsd || 0), 0);
     
     const lastActivity = [...mobileMoneyInvoices, ...cryptoInvoices]
@@ -93,29 +88,8 @@ async function getCompanyStats(slug: string) {
   }
 }
 
-// Helper function to get mobile money invoices
-async function getMobileMoneyInvoices(slug: string) {
-  try {
-    const invoicesDir = path.join(process.cwd(), 'data', 'companies', slug, 'mobile-money', 'invoices');
-    const files = await fs.readdir(invoicesDir);
-    
-    const invoices = [];
-    for (const file of files) {
-      if (file.endsWith('.json')) {
-        const filePath = path.join(invoicesDir, file);
-        const data = await fs.readFile(filePath, 'utf-8');
-        invoices.push(JSON.parse(data));
-      }
-    }
-    
-    return invoices;
-  } catch {
-    return [];
-  }
-}
-
 // Helper function to get crypto invoices
-async function getCryptoInvoices(_slug: string) {
+async function getCryptoInvoices() {
   try {
     // This would need to be implemented based on how you store crypto invoices
     // For now, return empty array with proper typing
@@ -140,17 +114,19 @@ async function getCryptoInvoices(_slug: string) {
 // Helper function to get recent invoices
 async function getRecentInvoices(slug: string) {
   try {
-    const mobileMoneyInvoices = await getMobileMoneyInvoices(slug);
-    const cryptoInvoices = await getCryptoInvoices(slug);
+    const mobileMoneyInvoices = await getAllCompanyInvoices(slug);
+    const cryptoInvoices = await getCryptoInvoices();
     
     const allInvoices = [
       ...mobileMoneyInvoices.map(invoice => ({
         id: invoice.id,
-        amount: invoice.amount || 0,
+        amount: parseFloat(invoice.amount || '0'),
         currency: invoice.currency || 'USD',
-        status: invoice.status || 'paid',
+        status: 'paid',
         createdAt: invoice.createdAt,
-        customerName: invoice.customerName,
+        customerName: ((invoice.customer as Record<string, unknown>)?.first_name as string) || 
+                      ((invoice.metadata as Record<string, unknown>)?.customer_name as string) ||
+                      undefined,
         paymentMethod: 'mobile-money'
       })),
       ...cryptoInvoices.map(invoice => ({
@@ -176,12 +152,12 @@ async function getRecentInvoices(slug: string) {
 // Helper function to get monthly stats
 async function getMonthlyStats(slug: string) {
   try {
-    const mobileMoneyInvoices = await getMobileMoneyInvoices(slug);
-    const cryptoInvoices = await getCryptoInvoices(slug);
+    const mobileMoneyInvoices = await getAllCompanyInvoices(slug);
+    const cryptoInvoices = await getCryptoInvoices();
     
     const allInvoices = [
       ...mobileMoneyInvoices.map(invoice => ({
-        amount: invoice.amount || 0,
+        amount: parseFloat(invoice.amount || '0'),
         createdAt: invoice.createdAt
       })),
       ...cryptoInvoices.map(invoice => ({
