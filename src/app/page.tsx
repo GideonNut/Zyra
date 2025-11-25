@@ -35,6 +35,15 @@ import { filterInvoices, sortInvoices, Invoice } from "@/lib/invoice-filtering";
 import { useBrand } from "@/contexts/brand-context";
 import { useTheme } from "@/contexts/theme-context";
 import Image from "next/image";
+import { Marquee } from "@/components/ui/marquee";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { TrendingUp } from "lucide-react";
+import { ScrollAnimate } from "@/components/scroll-animate";
 
 interface PaymentLink {
   id: string;
@@ -308,14 +317,17 @@ export default function Home() {
         <main className="container mx-auto px-6 py-16">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Zyra for Ghana Shops.
-                <br />
-                Get Paid Instantly.
+              <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight pb-2">
+                Do you guys take momo?
               </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6">
+                Says every Ghanaian when they want to pay for something
+              </p>
+              <h2 className="text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-6 leading-tight pb-2">
+                Yes, We even take Crypto!
+              </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                The simplest way for Ghana shops to create invoices and accept payments through mobile money and crypto.
-                Generate QR codes, track payments, and get paid faster.
+                Says every Zyra user
               </p>
             </div>
 
@@ -397,6 +409,229 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* Supported Currencies Marquee */}
+            <ScrollAnimate>
+              <div className="mb-20">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold mb-3">Supported Currencies</h2>
+                </div>
+                <div className="relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm py-6">
+                <Marquee pauseOnHover className="[--duration:80s]">
+                  {[
+                    { 
+                      symbol: "MTN", 
+                      name: "MTN MoMo", 
+                      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/MTN_Logo.svg/512px-MTN_Logo.svg.png" 
+                    },
+                    { 
+                      symbol: "VOD", 
+                      name: "Vodafone Cash", 
+                      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Vodafone_logo_red.svg/512px-Vodafone_logo_red.svg.png" 
+                    },
+                    { 
+                      symbol: "AT", 
+                      name: "AirtelTigo", 
+                      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Airtel_logo.svg/512px-Airtel_logo.svg.png" 
+                    },
+                    { 
+                      symbol: "GHS", 
+                      name: "Ghana Cedi", 
+                      logo: "https://flagcdn.com/w40/gh.png" 
+                    },
+                    { 
+                      symbol: "USD", 
+                      name: "US Dollar", 
+                      logo: "https://flagcdn.com/w40/us.png" 
+                    },
+                    { 
+                      symbol: "ETH", 
+                      name: "Ethereum", 
+                      logo: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" 
+                    },
+                    { 
+                      symbol: "BTC", 
+                      name: "Bitcoin", 
+                      logo: "https://assets.coingecko.com/coins/images/1/small/bitcoin.png" 
+                    },
+                    { 
+                      symbol: "USDC", 
+                      name: "USD Coin", 
+                      logo: "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png" 
+                    },
+                    { 
+                      symbol: "USDT", 
+                      name: "Tether", 
+                      logo: "https://assets.coingecko.com/coins/images/325/small/Tether.png" 
+                    },
+                    { 
+                      symbol: "MATIC", 
+                      name: "Polygon", 
+                      logo: "https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png" 
+                    },
+                    { 
+                      symbol: "BNB", 
+                      name: "BNB", 
+                      logo: "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png" 
+                    },
+                    { 
+                      symbol: "SOL", 
+                      name: "Solana", 
+                      logo: "https://assets.coingecko.com/coins/images/4128/small/solana.png" 
+                    },
+                    { 
+                      symbol: "AVAX", 
+                      name: "Avalanche", 
+                      logo: "https://assets.coingecko.com/coins/images/12559/small/avalanche-avax-logo.png" 
+                    },
+                  ].map((currency, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 px-6 py-3 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors"
+                      style={{ minWidth: "200px" }}
+                    >
+                      <img 
+                        src={currency.logo} 
+                        alt={currency.name}
+                        className="w-8 h-8 rounded-full object-cover grayscale brightness-0 invert opacity-80"
+                        onError={(e) => {
+                          // Fallback to a simple circle if image fails to load
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <div>
+                        <div className="font-bold text-primary">{currency.symbol}</div>
+                        <div className="text-xs text-muted-foreground">{currency.name}</div>
+                      </div>
+                    </div>
+                  ))}
+                </Marquee>
+                </div>
+              </div>
+            </ScrollAnimate>
+
+            {/* Features Grid */}
+            <ScrollAnimate delay={100}>
+              <div className="mb-20">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl font-bold mb-3">Why Choose Zyra?</h2>
+                  <p className="text-muted-foreground max-w-2xl mx-auto">
+                    Everything you need to manage invoices and get paid faster
+                  </p>
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card className="hover:border-primary/50 transition-colors">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <TrendingUp className="h-5 w-5 text-primary" />
+                      </div>
+                      Real-time Tracking
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      Track all your invoices and payments in real-time. Know exactly when payments are received.
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="hover:border-primary/50 transition-colors">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Check className="h-5 w-5 text-primary" />
+                      </div>
+                      Mobile Money Support
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      Accept payments through MTN MoMo, Vodafone Cash, and other mobile money services.
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="hover:border-primary/50 transition-colors">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Settings className="h-5 w-5 text-primary" />
+                      </div>
+                      Easy Management
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      Simple dashboard to create, manage, and export invoices. Filter and search with ease.
+                    </p>
+                  </CardContent>
+                </Card>
+                </div>
+              </div>
+            </ScrollAnimate>
+
+            {/* FAQs Section */}
+            <ScrollAnimate delay={200}>
+              <div className="mb-20">
+                <div className="text-center mb-12">
+                  <h2 className="text-4xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
+                  <p className="text-muted-foreground text-lg">
+                    Everything you need to know about Zyra
+                  </p>
+                </div>
+                <div className="max-w-3xl mx-auto">
+                <Accordion type="single" collapsible className="w-full space-y-3">
+                  <AccordionItem value="item-1" className="border-none">
+                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                      <span className="font-medium">How do I create an invoice?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                      Simply connect your wallet and click &quot;Create Invoice&quot;. Fill in the customer details, amount, and payment method. You can choose between mobile money or crypto payments. Once created, you&apos;ll get a shareable link and QR code.
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-2" className="border-none">
+                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                      <span className="font-medium">What payment methods are supported?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                      We support mobile money (MTN MoMo, Vodafone Cash) and cryptocurrency payments. For crypto, you can accept payments in various tokens including ETH, BTC, USDC, USDT, and many more across multiple blockchains.
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-3" className="border-none">
+                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                      <span className="font-medium">How do I receive payments?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                      For mobile money payments, funds are sent directly to your configured mobile money account. For crypto payments, funds are sent to your connected wallet address. You&apos;ll receive instant notifications when payments are completed.
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-4" className="border-none">
+                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                      <span className="font-medium">Is Zyra secure?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                      Yes, Zyra uses bank-level encryption and security measures. We never store your payment credentials or private keys. All crypto transactions are handled through secure wallet connections, and mobile money payments are processed through trusted payment providers.
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-5" className="border-none">
+                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                      <span className="font-medium">Can I export my invoices?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                      Yes! You can export your invoices as PDFs or Excel files. Use the export feature in your dashboard to download individual invoices or bulk export all your invoices for accounting purposes.
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-6" className="border-none">
+                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                      <span className="font-medium">What currencies can I use?</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                      You can price your invoices in Ghana Cedi (GHS) or US Dollars (USD). The system automatically handles currency conversion for crypto payments based on real-time exchange rates.
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+                </div>
+              </div>
+            </ScrollAnimate>
 
           </div>
         </main>
