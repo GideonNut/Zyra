@@ -83,6 +83,7 @@ export default function MasterAdminPage() {
     description: ''
   });
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
@@ -111,9 +112,13 @@ export default function MasterAdminPage() {
   }
 
   async function createCompany() {
-    if (!newCompany.name || !newCompany.slug) return;
+    if (!newCompany.name || !newCompany.slug) {
+      setCreateError('Company name and slug are required');
+      return;
+    }
     
     setCreating(true);
+    setCreateError(null);
     try {
       const res = await fetch('/api/admin/companies', {
         method: 'POST',
@@ -121,13 +126,20 @@ export default function MasterAdminPage() {
         body: JSON.stringify(newCompany)
       });
       
+      const data = await res.json();
+      
       if (res.ok) {
         setShowCreateDialog(false);
         setNewCompany({ name: '', slug: '', description: '' });
+        setCreateError(null);
         loadDashboardData(); // Refresh data
+      } else {
+        // Show error message to user
+        setCreateError(data.error || 'Failed to create company');
       }
     } catch (error) {
       console.error('Failed to create company:', error);
+      setCreateError('Failed to create company. Please try again.');
     } finally {
       setCreating(false);
     }
@@ -194,7 +206,12 @@ export default function MasterAdminPage() {
                 <p className="text-sm text-muted-foreground">Manage all companies and brands</p>
               </div>
             </div>
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <Dialog open={showCreateDialog} onOpenChange={(open) => {
+              setShowCreateDialog(open);
+              if (!open) {
+                setCreateError(null);
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
@@ -233,8 +250,16 @@ export default function MasterAdminPage() {
                       placeholder="Brief description of the company"
                     />
                   </div>
+                  {createError && (
+                    <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                      {createError}
+                    </div>
+                  )}
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                    <Button variant="outline" onClick={() => {
+                      setShowCreateDialog(false);
+                      setCreateError(null);
+                    }}>
                       Cancel
                     </Button>
                     <Button onClick={createCompany} disabled={creating}>
