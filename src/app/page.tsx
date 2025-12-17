@@ -579,68 +579,80 @@ export default function Home() {
             </ScrollAnimate>
 
             {/* FAQs Section */}
-            <ScrollAnimate delay={200}>
-              <div className="mb-20">
+            <div className="mb-20">
+              <ScrollAnimate delay={0}>
                 <div className="text-center mb-12">
                   <h2 className="text-4xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
                   <p className="text-muted-foreground text-lg">
                     Everything you need to know about Zyra
                   </p>
                 </div>
-                <div className="max-w-3xl mx-auto">
+              </ScrollAnimate>
+              <div className="max-w-3xl mx-auto">
                 <Accordion type="single" collapsible className="w-full space-y-3">
-                  <AccordionItem value="item-1" className="border-none">
-                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
-                      <span className="font-medium">How do I create an invoice?</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
-                      Simply connect your wallet and click &quot;Create Invoice&quot;. Fill in the customer details, amount, and payment method. You can choose between mobile money or crypto payments. Once created, you&apos;ll get a shareable link and QR code.
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="item-2" className="border-none">
-                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
-                      <span className="font-medium">What payment methods are supported?</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
-                      We support mobile money (MTN MoMo, Vodafone Cash) and cryptocurrency payments. For crypto, you can accept payments in various tokens including ETH, BTC, USDC, USDT, and many more across multiple blockchains.
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="item-3" className="border-none">
-                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
-                      <span className="font-medium">How do I receive payments?</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
-                      For mobile money payments, funds are sent directly to your configured mobile money account. For crypto payments, funds are sent to your connected wallet address. You&apos;ll receive instant notifications when payments are completed.
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="item-4" className="border-none">
-                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
-                      <span className="font-medium">Is Zyra secure?</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
-                      Yes, Zyra uses bank-level encryption and security measures. We never store your payment credentials or private keys. All crypto transactions are handled through secure wallet connections, and mobile money payments are processed through trusted payment providers.
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="item-5" className="border-none">
-                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
-                      <span className="font-medium">Can I export my invoices?</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
-                      Yes! You can export your invoices as PDFs or Excel files. Use the export feature in your dashboard to download individual invoices or bulk export all your invoices for accounting purposes.
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="item-6" className="border-none">
-                    <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
-                      <span className="font-medium">What currencies can I use?</span>
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
-                      You can price your invoices in Ghana Cedi (GHS) or US Dollars (USD). The system automatically handles currency conversion for crypto payments based on real-time exchange rates.
-                    </AccordionContent>
-                  </AccordionItem>
+                  <ScrollAnimate delay={100}>
+                    <AccordionItem value="item-1" className="border-none">
+                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                        <span className="font-medium">How do I create an invoice?</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                        Simply connect your wallet and click &quot;Create Invoice&quot;. Fill in the customer details, amount, and payment method. You can choose between mobile money or crypto payments. Once created, you&apos;ll get a shareable link and QR code.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </ScrollAnimate>
+                  <ScrollAnimate delay={200}>
+                    <AccordionItem value="item-2" className="border-none">
+                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                        <span className="font-medium">What payment methods are supported?</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                        We support mobile money (MTN MoMo, Vodafone Cash) and cryptocurrency payments. For crypto, you can accept payments in various tokens including ETH, BTC, USDC, USDT, and many more across multiple blockchains.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </ScrollAnimate>
+                  <ScrollAnimate delay={300}>
+                    <AccordionItem value="item-3" className="border-none">
+                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                        <span className="font-medium">How do I receive payments?</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                        For mobile money payments, funds are sent directly to your configured mobile money account. For crypto payments, funds are sent to your connected wallet address. You&apos;ll receive instant notifications when payments are completed.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </ScrollAnimate>
+                  <ScrollAnimate delay={400}>
+                    <AccordionItem value="item-4" className="border-none">
+                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                        <span className="font-medium">Is Zyra secure?</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                        Yes, Zyra uses bank-level encryption and security measures. We never store your payment credentials or private keys. All crypto transactions are handled through secure wallet connections, and mobile money payments are processed through trusted payment providers.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </ScrollAnimate>
+                  <ScrollAnimate delay={500}>
+                    <AccordionItem value="item-5" className="border-none">
+                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                        <span className="font-medium">Can I export my invoices?</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                        Yes! You can export your invoices as PDFs or Excel files. Use the export feature in your dashboard to download individual invoices or bulk export all your invoices for accounting purposes.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </ScrollAnimate>
+                  <ScrollAnimate delay={600}>
+                    <AccordionItem value="item-6" className="border-none">
+                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                        <span className="font-medium">What currencies can I use?</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                        You can price your invoices in Ghana Cedi (GHS) or US Dollars (USD). The system automatically handles currency conversion for crypto payments based on real-time exchange rates.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </ScrollAnimate>
                 </Accordion>
-                </div>
               </div>
-            </ScrollAnimate>
+            </div>
 
           </div>
         </main>
