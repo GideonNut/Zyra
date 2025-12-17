@@ -58,6 +58,7 @@ export function getFirestoreInstance(): Firestore {
 export const COLLECTIONS = {
   MOBILE_MONEY_INVOICES: 'mobileMoneyInvoices',
   COMPANY_INVOICES: 'companyInvoices',
+  CRYPTO_INVOICES: 'cryptoInvoices',
   BRANDS: 'brands',
 } as const;
 
