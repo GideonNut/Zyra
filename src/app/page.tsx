@@ -132,9 +132,10 @@ export default function Home() {
   useEffect(() => {
     const fetchMobileMoneyInvoices = async () => {
       try {
-        const url = (typeof window !== 'undefined' && window.location?.pathname?.startsWith('/c/') && brand?.id)
+        // Always use company-specific endpoint when slug is available for proper isolation
+        const url = slug
           ? `/api/companies/${slug}/mobile-money-invoices`
-          : '/api/mobile-money-invoices';
+          : '/api/mobile-money-invoices?companySlug=';
         const mobileMoneyResponse = await fetch(url);
         const mobileMoneyData = await mobileMoneyResponse.json();
         setMobileMoneyInvoices(mobileMoneyData.invoices || []);
