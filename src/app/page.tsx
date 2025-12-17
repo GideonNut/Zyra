@@ -524,9 +524,6 @@ export default function Home() {
               <div className="mb-20">
                 <div className="text-center mb-12">
                   <h2 className="text-3xl font-bold mb-3">Why Choose Zyra?</h2>
-                  <p className="text-muted-foreground max-w-2xl mx-auto">
-                    Everything you need to manage invoices and get paid faster
-                  </p>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Card className="hover:border-primary/50 transition-colors">
