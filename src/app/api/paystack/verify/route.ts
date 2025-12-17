@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveInvoice } from '@/lib/invoice-storage';
+import { saveCompanyInvoice } from '@/lib/company-invoice-storage';
 import { whatsappService } from '@/lib/whatsapp-service';
 import { getWhatsAppConfig } from '@/lib/whatsapp-config';
+import { getBrandBySlug } from '@/lib/brand-storage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,29 +60,87 @@ export async function POST(request: NextRequest) {
           }
         };
 
-        // Store the invoice data
-        const savedInvoice = await saveInvoice(invoiceData);
-        console.log('Mobile Money Payment Invoice Created and Saved:', savedInvoice);
+        // Store the invoice data with company scoping if company slug is available
+        const companySlug: string | undefined = data.data.metadata?.company_slug || undefined;
+        if (companySlug) {
+          const savedInvoice = await saveCompanyInvoice(companySlug, invoiceData);
+          console.log('Mobile Money Payment Invoice Created and Saved (Company):', companySlug, savedInvoice.id);
+        } else {
+          const savedInvoice = await saveInvoice(invoiceData);
+          console.log('Mobile Money Payment Invoice Created and Saved (Global):', savedInvoice.id);
+        }
 
-        // Send WhatsApp notification if configured
-        const whatsappConfig = getWhatsAppConfig();
-        if (whatsappConfig.enabled && whatsappService.isConfigured()) {
-          const phoneNumber = data.data.metadata?.phone_number;
-          if (phoneNumber) {
-            try {
-              await whatsappService.sendPaymentSuccessNotification(
-                phoneNumber,
-                data.data.metadata?.customer_name || 'Customer',
-                (data.data.amount / 100).toFixed(2), // Convert from kobo to currency
-                data.data.currency,
-                'mobile_money',
-                data.data.reference
-              );
-              console.log('WhatsApp notification sent successfully');
-            } catch (whatsappError) {
-              console.error('Error sending WhatsApp notification:', whatsappError);
-              // Don't fail the payment verification if WhatsApp notification fails
+        // Send WhatsApp notification using per-brand settings if available, otherwise env
+        const phoneNumber = data.data.metadata?.phone_number;
+        if (phoneNumber) {
+          try {
+            const companySlug: string | undefined = data.data.metadata?.company_slug || undefined;
+            if (companySlug) {
+              // try load brand config from Firestore
+              try {
+                const brand = await getBrandBySlug(companySlug);
+                if (brand?.whatsapp?.enabled && brand.whatsapp.accessToken && brand.whatsapp.phoneNumberId) {
+                  const creds = { 
+                    accessToken: brand.whatsapp.accessToken, 
+                    phoneNumberId: brand.whatsapp.phoneNumberId 
+                  };
+                  const ok = await whatsappService.sendPaymentSuccessNotificationWithCredentials(
+                    creds,
+                    phoneNumber,
+                    data.data.metadata?.customer_name || 'Customer',
+                    (data.data.amount / 100).toFixed(2),
+                    data.data.currency,
+                    'mobile_money',
+                    data.data.reference
+                  );
+                  if (ok) console.log('WhatsApp (brand) notification sent successfully');
+                } else {
+                  // fallback to env-based if globally enabled
+                  const whatsappConfig = getWhatsAppConfig();
+                  if (whatsappConfig.enabled && whatsappService.isConfigured()) {
+                    await whatsappService.sendPaymentSuccessNotification(
+                      phoneNumber,
+                      data.data.metadata?.customer_name || 'Customer',
+                      (data.data.amount / 100).toFixed(2),
+                      data.data.currency,
+                      'mobile_money',
+                      data.data.reference
+                    );
+                    console.log('WhatsApp (env) notification sent successfully');
+                  }
+                }
+              } catch {
+                // if brand config not found or invalid, fallback to env
+                const whatsappConfig = getWhatsAppConfig();
+                if (whatsappConfig.enabled && whatsappService.isConfigured()) {
+                  await whatsappService.sendPaymentSuccessNotification(
+                    phoneNumber,
+                    data.data.metadata?.customer_name || 'Customer',
+                    (data.data.amount / 100).toFixed(2),
+                    data.data.currency,
+                    'mobile_money',
+                    data.data.reference
+                  );
+                  console.log('WhatsApp (env) notification sent successfully');
+                }
+              }
+            } else {
+              const whatsappConfig = getWhatsAppConfig();
+              if (whatsappConfig.enabled && whatsappService.isConfigured()) {
+                await whatsappService.sendPaymentSuccessNotification(
+                  phoneNumber,
+                  data.data.metadata?.customer_name || 'Customer',
+                  (data.data.amount / 100).toFixed(2),
+                  data.data.currency,
+                  'mobile_money',
+                  data.data.reference
+                );
+                console.log('WhatsApp (env) notification sent successfully');
+              }
             }
+          } catch (whatsappError) {
+            console.error('Error sending WhatsApp notification:', whatsappError);
+            // Don't fail the payment verification if WhatsApp notification fails
           }
         }
 
