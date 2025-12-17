@@ -317,18 +317,26 @@ export default function Home() {
         <main className="container mx-auto px-6 py-16">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
-              <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight pb-2">
-                Do you guys take momo?
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6">
-                Says every Ghanaian when they want to pay for something
-              </p>
-              <h2 className="text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-6 leading-tight pb-2">
-                Yes, We even take Crypto!
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Says every Zyra user
-              </p>
+              <ScrollAnimate delay={0}>
+                <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight pb-2">
+                  Do you guys take momo?
+                </h1>
+              </ScrollAnimate>
+              <ScrollAnimate delay={200}>
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6">
+                  Says every Ghanaian when they want to pay for something
+                </p>
+              </ScrollAnimate>
+              <ScrollAnimate delay={400}>
+                <h2 className="text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-6 leading-tight pb-2">
+                  Yes, We even take Crypto!
+                </h2>
+              </ScrollAnimate>
+              <ScrollAnimate delay={600}>
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                  Says every Zyra user
+                </p>
+              </ScrollAnimate>
             </div>
 
             <div className="grid md:grid-cols-2 gap-16 items-center mb-20">
@@ -370,7 +378,7 @@ export default function Home() {
               {/* Right: Connection */}
               <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold mb-3">Get Started</h2>
+                  <h2 className="text-2xl font-bold mb-3">Try it out</h2>
                   <p className="text-muted-foreground">Connect your wallet to start creating invoices</p>
                 </div>
 
