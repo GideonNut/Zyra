@@ -33,6 +33,29 @@ export async function getAllCompanyInvoices(slug: string): Promise<CompanyMobile
   }
 }
 
+export async function getCompanyInvoiceById(id: string, slug?: string): Promise<CompanyMobileMoneyInvoice | null> {
+  try {
+    const db = getFirestoreInstance();
+    const doc = await db.collection(COLLECTIONS.COMPANY_INVOICES).doc(id).get();
+    
+    if (!doc.exists) {
+      return null;
+    }
+    
+    const invoice = { id: doc.id, ...doc.data() } as CompanyMobileMoneyInvoice;
+    
+    // If slug is provided, verify it matches the invoice's company slug
+    if (slug && invoice.companySlug !== slug) {
+      return null; // Invoice belongs to a different company
+    }
+    
+    return invoice;
+  } catch (error) {
+    console.error('Error fetching company invoice by ID from Firestore:', error);
+    return null;
+  }
+}
+
 export async function saveCompanyInvoice(slug: string, invoice: Omit<CompanyMobileMoneyInvoice, 'id' | 'createdAt' | 'companySlug'>): Promise<CompanyMobileMoneyInvoice> {
   try {
     const db = getFirestoreInstance();
