@@ -102,7 +102,14 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         const data: Brand = await res.json();
-        if (!cancelled) setBrand(data);
+        if (!cancelled) {
+          const brandData = { ...data };
+          if (process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
+            if (!brandData.payment) brandData.payment = {};
+            brandData.payment.paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+          }
+          setBrand(brandData);
+        }
       } catch {
         if (!cancelled) setBrand(undefined);
       }

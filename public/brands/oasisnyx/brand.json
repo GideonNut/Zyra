@@ -1,0 +1,11 @@
+{
+  "id": "oasisnyx",
+  "name": "Oasis NYX",
+  "meta": {
+    "title": "Oasis NYX Shop",
+    "description": "The official shop for Oasis NYX"
+  },
+  "payment": {
+    "paystackPublicKey": "your_paystack_public_key_here"
+  }
+}
