@@ -652,7 +652,7 @@ export default function Home() {
                         <span className="font-medium">How do I start using Zyra?</span>
                       </AccordionTrigger>
                       <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
-                        Getting started is easy! Simply connect your wallet or sign in with your email, set up your business profile, add your payment details, and you&apos;re ready to create and send invoices. The entire setup process takes less than 5 minutes.
+                        To get started, scroll down to the &quot;Interested in Zyra?&quot; section and fill in your email and phone number. We&apos;ll reach out to you within an hour to help you set up your account and get you started with creating invoices.
                       </AccordionContent>
                     </AccordionItem>
                   </ScrollAnimate>
