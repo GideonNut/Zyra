@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FileText, Plus, Check, Clock, Settings } from "lucide-react";
+import { FileText, Plus, Check, Clock, Settings, Mail, Github, Twitter, Send } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { InvoicePDFGenerator } from "@/components/invoice-pdf-generator";
@@ -45,6 +45,7 @@ import {
 import { TrendingUp } from "lucide-react";
 import { ScrollAnimate } from "@/components/scroll-animate";
 import { ContactInterestForm } from "@/components/contact-interest-form";
+import Link from "next/link";
 
 interface PaymentLink {
   id: string;
@@ -675,6 +676,108 @@ export default function Home() {
                 </div>
               </ScrollAnimate>
             </div>
+
+            {/* Footer */}
+            <footer className="mt-32 pt-16 border-t border-border/50">
+              <div className="max-w-6xl mx-auto px-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                  {/* Brand */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <FileText className="h-6 w-6 text-primary" />
+                      <h3 className="text-lg font-bold">Zyra</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Modern invoicing made simple. Accept payments via mobile money and crypto.
+                    </p>
+                  </div>
+
+                  {/* Product */}
+                  <div>
+                    <h4 className="font-semibold mb-4">Product</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>
+                        <Link href="/docs" className="hover:text-foreground transition-colors">
+                          Documentation
+                        </Link>
+                      </li>
+                      <li>
+                        <a href="#" className="hover:text-foreground transition-colors">
+                          Features
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="hover:text-foreground transition-colors">
+                          Pricing
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Company */}
+                  <div>
+                    <h4 className="font-semibold mb-4">Company</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>
+                        <a href="#" className="hover:text-foreground transition-colors">
+                          About
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="hover:text-foreground transition-colors">
+                          Blog
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" className="hover:text-foreground transition-colors">
+                          Contact
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Social */}
+                  <div>
+                    <h4 className="font-semibold mb-4">Follow Us</h4>
+                    <div className="flex gap-3">
+                      <a
+                        href="https://twitter.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        aria-label="Twitter"
+                      >
+                        <Twitter className="h-5 w-5" />
+                      </a>
+                      <a
+                        href="https://t.me/myzyra_xyz"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        aria-label="Telegram"
+                      >
+                        <Send className="h-5 w-5" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Footer */}
+                <div className="border-t border-border/50 pt-8 pb-8">
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+                    <p>&copy; 2026 Zyra. All rights reserved.</p>
+                    <div className="flex gap-6">
+                      <a href="#" className="hover:text-foreground transition-colors">
+                        Privacy Policy
+                      </a>
+                      <a href="#" className="hover:text-foreground transition-colors">
+                        Terms of Service
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </footer>
 
           </div>
         </main>
