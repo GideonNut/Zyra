@@ -496,8 +496,7 @@ export default function Home() {
                   ].map((currency, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3 px-6 py-3 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors"
-                      style={{ minWidth: "200px" }}
+                      className="flex items-center gap-3"
                     >
                       <img 
                         src={currency.logo} 
