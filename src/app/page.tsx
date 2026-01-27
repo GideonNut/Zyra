@@ -425,8 +425,8 @@ export default function Home() {
                 <div className="text-center mb-8">
                   <h2 className="text-3xl font-bold mb-3">Supported Currencies</h2>
                 </div>
-                <div className="relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm py-6">
-                <Marquee pauseOnHover className="[--duration:80s]">
+                <div className="relative overflow-hidden">
+                <Marquee pauseOnHover className="[--duration:80s] [--gap:3rem]">
                   {[
                     { 
                       symbol: "MTN", 
