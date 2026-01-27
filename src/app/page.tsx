@@ -501,7 +501,7 @@ export default function Home() {
                       <img 
                         src={currency.logo} 
                         alt={currency.name}
-                        className="w-12 h-12 rounded-full object-cover grayscale brightness-0 invert opacity-80"
+                        className="w-12 h-12 rounded-full object-cover opacity-60"
                         onError={(e) => {
                           // Fallback to a simple circle if image fails to load
                           e.currentTarget.style.display = 'none';
