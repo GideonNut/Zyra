@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/accordion";
 import { TrendingUp } from "lucide-react";
 import { ScrollAnimate } from "@/components/scroll-animate";
+import { ContactInterestForm } from "@/components/contact-interest-form";
 
 interface PaymentLink {
   id: string;
@@ -587,6 +588,16 @@ export default function Home() {
               <div className="max-w-3xl mx-auto">
                 <Accordion type="single" collapsible className="w-full space-y-3">
                   <ScrollAnimate delay={100}>
+                    <AccordionItem value="item-0" className="border-none">
+                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                        <span className="font-medium">How do I start using Zyra?</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                        To get started, scroll down to the &quot;Interested in Zyra?&quot; section and fill in your email and phone number. We&apos;ll reach out to you within an hour to help you set up your account and get you started with creating invoices.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </ScrollAnimate>
+                  <ScrollAnimate delay={200}>
                     <AccordionItem value="item-1" className="border-none">
                       <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
                         <span className="font-medium">How do I create an invoice?</span>
@@ -596,7 +607,7 @@ export default function Home() {
                       </AccordionContent>
                     </AccordionItem>
                   </ScrollAnimate>
-                  <ScrollAnimate delay={200}>
+                  <ScrollAnimate delay={300}>
                     <AccordionItem value="item-2" className="border-none">
                       <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
                         <span className="font-medium">What payment methods are supported?</span>
@@ -606,7 +617,7 @@ export default function Home() {
                       </AccordionContent>
                     </AccordionItem>
                   </ScrollAnimate>
-                  <ScrollAnimate delay={300}>
+                  <ScrollAnimate delay={400}>
                     <AccordionItem value="item-3" className="border-none">
                       <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
                         <span className="font-medium">How do I receive payments?</span>
@@ -616,7 +627,7 @@ export default function Home() {
                       </AccordionContent>
                     </AccordionItem>
                   </ScrollAnimate>
-                  <ScrollAnimate delay={400}>
+                  <ScrollAnimate delay={500}>
                     <AccordionItem value="item-4" className="border-none">
                       <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
                         <span className="font-medium">Is Zyra secure?</span>
@@ -626,7 +637,7 @@ export default function Home() {
                       </AccordionContent>
                     </AccordionItem>
                   </ScrollAnimate>
-                  <ScrollAnimate delay={500}>
+                  <ScrollAnimate delay={600}>
                     <AccordionItem value="item-5" className="border-none">
                       <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
                         <span className="font-medium">Can I export my invoices?</span>
@@ -636,23 +647,13 @@ export default function Home() {
                       </AccordionContent>
                     </AccordionItem>
                   </ScrollAnimate>
-                  <ScrollAnimate delay={600}>
+                  <ScrollAnimate delay={700}>
                     <AccordionItem value="item-6" className="border-none">
                       <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
                         <span className="font-medium">What currencies can I use?</span>
                       </AccordionTrigger>
                       <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
                         You can price your invoices in Ghana Cedi (GHS) or US Dollars (USD). The system automatically handles currency conversion for crypto payments based on real-time exchange rates.
-                      </AccordionContent>
-                    </AccordionItem>
-                  </ScrollAnimate>
-                  <ScrollAnimate delay={700}>
-                    <AccordionItem value="item-7" className="border-none">
-                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
-                        <span className="font-medium">How do I start using Zyra?</span>
-                      </AccordionTrigger>
-                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
-                        To get started, scroll down to the &quot;Interested in Zyra?&quot; section and fill in your email and phone number. We&apos;ll reach out to you within an hour to help you set up your account and get you started with creating invoices.
                       </AccordionContent>
                     </AccordionItem>
                   </ScrollAnimate>
@@ -670,69 +671,7 @@ export default function Home() {
                       Leave your contact information and we&apos;ll get in touch with you soon
                     </p>
                   </div>
-                  <form
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      const email = formData.get('email') as string;
-                      const phone = formData.get('phone') as string;
-
-                      try {
-                        const response = await fetch('/api/contact-interest', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({ email, phone }),
-                        });
-
-                        if (!response.ok) {
-                          const error = await response.json();
-                          throw new Error(error.error || 'Failed to submit form');
-                        }
-
-                        (e.target as HTMLFormElement).reset();
-                        alert('Thank you for your interest! We\'ll contact you soon.');
-                      } catch (error) {
-                        const message = error instanceof Error ? error.message : 'An error occurred';
-                        alert(`Error: ${message}`);
-                      }
-                    }}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium mb-2">
-                        Email Address
-                      </label>
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        placeholder="your@email.com"
-                        className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium mb-2">
-                        Phone Number
-                      </label>
-                      <input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        required
-                        placeholder="+1 (555) 000-0000"
-                        className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                    >
-                      Get In Touch
-                    </Button>
-                  </form>
+                  <ContactInterestForm />
                 </div>
               </ScrollAnimate>
             </div>
