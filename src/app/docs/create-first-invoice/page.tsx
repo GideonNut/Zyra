@@ -76,11 +76,11 @@ export default function CreateFirstInvoiceDoc() {
             <div className="bg-muted/30 p-6 rounded-lg border border-border/50 space-y-4">
               <p className="text-sm text-muted-foreground">
                 <strong>Method 1: Quick Create</strong><br/>
-                Click the "+ Create Invoice" button in the top right corner of the dashboard.
+                Click the &quot;+ Create Invoice&quot; button in the top right corner of the dashboard.
               </p>
               <p className="text-sm text-muted-foreground">
                 <strong>Method 2: From Dashboard</strong><br/>
-                Navigate to your dashboard and click "New Invoice" from the invoices section.
+                Navigate to your dashboard and click &quot;New Invoice&quot; from the invoices section.
               </p>
             </div>
           </section>
@@ -89,7 +89,7 @@ export default function CreateFirstInvoiceDoc() {
             <h2 className="text-2xl font-bold mb-3">Customer Information</h2>
             <div className="space-y-4">
               <p className="text-muted-foreground leading-relaxed">
-                Start by entering your customer's details. This information will appear on the invoice.
+                Start by entering your customer&apos;s details. This information will appear on the invoice.
               </p>
               
               <div className="bg-muted/20 p-4 rounded-lg border border-border/50 space-y-3">
@@ -99,7 +99,7 @@ export default function CreateFirstInvoiceDoc() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Email Address</h4>
-                  <p className="text-xs text-muted-foreground">This is where the invoice will be sent. Make sure it's correct!</p>
+                    <p className="text-xs text-muted-foreground">This is where the invoice will be sent. Make sure it&apos;s correct!</p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Phone Number (Optional)</h4>
@@ -107,7 +107,7 @@ export default function CreateFirstInvoiceDoc() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-sm mb-1">Business Address (Optional)</h4>
-                  <p className="text-xs text-muted-foreground">Customer's business address for formal invoices</p>
+                  <p className="text-xs text-muted-foreground">Customer&apos;s business address for formal invoices</p>
                 </div>
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function CreateFirstInvoiceDoc() {
             <h2 className="text-2xl font-bold mb-3">Invoice Details</h2>
             <div className="space-y-4">
               <p className="text-muted-foreground leading-relaxed">
-                Enter the specifics of what you're invoicing for.
+                Enter the specifics of what you&apos;re invoicing for.
               </p>
 
               <div className="grid gap-4">
@@ -134,7 +134,7 @@ export default function CreateFirstInvoiceDoc() {
                   <CardContent className="pt-6">
                     <h4 className="font-semibold mb-2">Description</h4>
                     <p className="text-sm text-muted-foreground">
-                      Describe the goods or services provided. Example: "Website Design - 3 pages"
+                      Describe the goods or services provided. Example: &quot;Website Design - 3 pages&quot;
                     </p>
                   </CardContent>
                 </Card>
@@ -180,7 +180,7 @@ export default function CreateFirstInvoiceDoc() {
                 <div>
                   <h4 className="font-semibold mb-2">Mobile Money</h4>
                   <p className="text-sm text-muted-foreground">
-                    Allow customers to pay via MTN MoMo or Vodafone Cash. They'll receive payment instructions in the invoice.
+                      Allow customers to pay via MTN MoMo or Vodafone Cash. They&apos;ll receive payment instructions in the invoice.
                   </p>
                 </div>
 
@@ -205,7 +205,7 @@ export default function CreateFirstInvoiceDoc() {
             <h2 className="text-2xl font-bold mb-3">Sending Your Invoice</h2>
             <div className="space-y-4">
               <p className="text-muted-foreground leading-relaxed">
-                Once you've filled in all the details, you can send your invoice in multiple ways:
+                Once you&apos;ve filled in all the details, you can send your invoice in multiple ways:
               </p>
 
               <div className="grid gap-4">
@@ -213,7 +213,7 @@ export default function CreateFirstInvoiceDoc() {
                   <CardContent className="pt-6">
                     <h4 className="font-semibold mb-2">1. Email</h4>
                     <p className="text-sm text-muted-foreground">
-                      The invoice is automatically sent to your customer's email address with a payment link.
+                      The invoice is automatically sent to your customer&apos;s email address with a payment link.
                     </p>
                   </CardContent>
                 </Card>
@@ -246,14 +246,14 @@ export default function CreateFirstInvoiceDoc() {
               <li>Set realistic due dates (7-30 days is typical)</li>
               <li>Include clear descriptions - it reduces payment disputes</li>
               <li>Use notes to thank customers or add terms and conditions</li>
-              <li>Enable payment reminders so customers don't forget</li>
+              <li>Enable payment reminders so customers don&apos;t forget</li>
               <li>Keep your payment methods updated to ensure customers can pay</li>
             </ul>
           </section>
 
           <section>
             <p className="text-sm text-muted-foreground italic border-l-4 border-primary/30 pl-4">
-              💡 Tip: After sending, you can track your invoice's status in the dashboard. You'll be notified 
+              💡 Tip: After sending, you can track your invoice&apos;s status in the dashboard. You&apos;ll be notified 
               instantly when your customer opens the invoice or makes a payment!
             </p>
           </section>

@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FileText, Plus, Check, Clock, Settings, Mail, Github, Twitter, Send } from "lucide-react";
+import { FileText, Plus, Check, Clock, Settings, Twitter, Send } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { InvoicePDFGenerator } from "@/components/invoice-pdf-generator";

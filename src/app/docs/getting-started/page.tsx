@@ -53,7 +53,7 @@ export default function GettingStartedDoc() {
               <li><a href="#what-is-zyra" className="text-primary hover:underline">What is Zyra?</a></li>
               <li><a href="#create-account" className="text-primary hover:underline">Creating Your Account</a></li>
               <li><a href="#first-steps" className="text-primary hover:underline">First Steps</a></li>
-              <li><a href="#next" className="text-primary hover:underline">What's Next?</a></li>
+              <li><a href="#next" className="text-primary hover:underline">What&apos;s Next?</a></li>
             </ul>
           </CardContent>
         </Card>
@@ -64,7 +64,7 @@ export default function GettingStartedDoc() {
             <h2 className="text-2xl font-bold mb-3">What is Zyra?</h2>
             <p className="text-muted-foreground leading-relaxed">
               Zyra is a modern invoice management platform that helps you create, send, and track invoices 
-              with ease. Whether you're a freelancer, small business owner, or entrepreneur, Zyra simplifies 
+              with ease. Whether you&apos;re a freelancer, small business owner, or entrepreneur, Zyra simplifies 
               the invoicing process and supports multiple payment methods including mobile money and cryptocurrency.
             </p>
           </section>
@@ -80,7 +80,7 @@ export default function GettingStartedDoc() {
                 <div>
                   <h3 className="font-semibold mb-2">Step 1: Sign Up</h3>
                   <p className="text-sm text-muted-foreground">
-                    Fill out the "Interested in Zyra?" form on our home page with your email and phone number. 
+                    Fill out the &quot;Interested in Zyra?&quot; form on our home page with your email and phone number. 
                     Our team will reach out to you within an hour to help you get set up.
                   </p>
                 </div>
@@ -88,7 +88,7 @@ export default function GettingStartedDoc() {
                 <div className="border-t border-border/50 pt-4">
                   <h3 className="font-semibold mb-2">Step 2: Verify Your Details</h3>
                   <p className="text-sm text-muted-foreground">
-                    We'll contact you to verify your information and discuss your invoicing needs. 
+                    We&apos;ll contact you to verify your information and discuss your invoicing needs. 
                     This helps us tailor Zyra to work best for your business.
                   </p>
                 </div>
@@ -108,7 +108,7 @@ export default function GettingStartedDoc() {
             <h2 className="text-2xl font-bold mb-3">First Steps</h2>
             <div className="space-y-4">
               <p className="text-muted-foreground leading-relaxed">
-                After your account is set up, here's what you should do:
+                After your account is set up, here&apos;s what you should do:
               </p>
 
               <div className="grid gap-4">
@@ -136,7 +136,7 @@ export default function GettingStartedDoc() {
                   <CardContent className="pt-6">
                     <h4 className="font-semibold mb-2">3. Create Your First Invoice</h4>
                     <p className="text-sm text-muted-foreground">
-                      Click on "Create Invoice" and fill in your customer details, amount, and payment method. 
+                      Click on &quot;Create Invoice&quot; and fill in your customer details, amount, and payment method. 
                       Review the preview and send it to your customer via email or share link.
                     </p>
                   </CardContent>
@@ -146,7 +146,7 @@ export default function GettingStartedDoc() {
           </section>
 
           <section id="next">
-            <h2 className="text-2xl font-bold mb-3">What's Next?</h2>
+            <h2 className="text-2xl font-bold mb-3">What&apos;s Next?</h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
               Now that you understand the basics, explore more features:
             </p>

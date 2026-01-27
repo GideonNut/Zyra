@@ -205,7 +205,7 @@ export default function PaymentMethodsDoc() {
             <h2 className="text-2xl font-bold mb-3">Choosing Payment Methods</h2>
             <div className="space-y-4">
               <p className="text-muted-foreground leading-relaxed">
-                The best approach is to enable both payment methods and let customers choose. Here's guidance for different scenarios:
+                The best approach is to enable both payment methods and let customers choose. Here&apos;s guidance for different scenarios:
               </p>
 
               <div className="grid gap-4">
@@ -213,7 +213,7 @@ export default function PaymentMethodsDoc() {
                   <CardContent className="pt-6">
                     <h4 className="font-semibold mb-2">Local Business in Ghana?</h4>
                     <p className="text-sm text-muted-foreground">
-                      Prioritize mobile money (MTN MoMo, Vodafone Cash) as it's the most familiar to local customers. 
+                      Prioritize mobile money (MTN MoMo, Vodafone Cash) as it&apos;s the most familiar to local customers. 
                       Include crypto as an alternative.
                     </p>
                   </CardContent>
@@ -223,7 +223,7 @@ export default function PaymentMethodsDoc() {
                   <CardContent className="pt-6">
                     <h4 className="font-semibold mb-2">International Customers?</h4>
                     <p className="text-sm text-muted-foreground">
-                      Focus on crypto payments as they work globally. Mobile money might not be available in your customer's country.
+                      Focus on crypto payments as they work globally. Mobile money might not be available in your customer&apos;s country.
                     </p>
                   </CardContent>
                 </Card>
@@ -241,7 +241,7 @@ export default function PaymentMethodsDoc() {
                   <CardContent className="pt-6">
                     <h4 className="font-semibold mb-2">Mixed Customer Base?</h4>
                     <p className="text-sm text-muted-foreground">
-                      Always offer both options. Let customers pay in the way they're most comfortable with.
+                      Always offer both options. Let customers pay in the way they&apos;re most comfortable with.
                     </p>
                   </CardContent>
                 </Card>
@@ -251,7 +251,7 @@ export default function PaymentMethodsDoc() {
 
           <section>
             <p className="text-sm text-muted-foreground italic border-l-4 border-primary/30 pl-4">
-              💡 Pro Tip: Set up both payment methods on your account even if you don't immediately use them. 
+              💡 Pro Tip: Set up both payment methods on your account even if you don&apos;t immediately use them. 
               You can always enable or disable them per invoice.
             </p>
           </section>

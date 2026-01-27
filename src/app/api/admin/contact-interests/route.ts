@@ -9,7 +9,7 @@ interface ContactInterest {
   status: string;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const db = getFirestoreInstance();
 
