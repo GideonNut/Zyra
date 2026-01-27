@@ -646,8 +646,95 @@ export default function Home() {
                       </AccordionContent>
                     </AccordionItem>
                   </ScrollAnimate>
+                  <ScrollAnimate delay={700}>
+                    <AccordionItem value="item-7" className="border-none">
+                      <AccordionTrigger className="text-left bg-muted/50 hover:bg-muted rounded-lg px-6 py-4 [&[data-state=open]]:bg-muted [&[data-state=open]]:rounded-b-none">
+                        <span className="font-medium">How do I start using Zyra?</span>
+                      </AccordionTrigger>
+                      <AccordionContent className="bg-muted/50 rounded-b-lg px-6 py-4 text-muted-foreground">
+                        Getting started is easy! Simply connect your wallet or sign in with your email, set up your business profile, add your payment details, and you&apos;re ready to create and send invoices. The entire setup process takes less than 5 minutes.
+                      </AccordionContent>
+                    </AccordionItem>
+                  </ScrollAnimate>
                 </Accordion>
               </div>
+            </div>
+
+            {/* Interest Form Section */}
+            <div className="mt-20 max-w-2xl mx-auto">
+              <ScrollAnimate delay={0}>
+                <div className="bg-muted/30 border border-border/50 rounded-lg p-8 md:p-12">
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl md:text-3xl font-bold mb-3">Interested in Zyra?</h3>
+                    <p className="text-muted-foreground">
+                      Leave your contact information and we&apos;ll get in touch with you soon
+                    </p>
+                  </div>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      const email = formData.get('email') as string;
+                      const phone = formData.get('phone') as string;
+
+                      try {
+                        const response = await fetch('/api/contact-interest', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ email, phone }),
+                        });
+
+                        if (!response.ok) {
+                          const error = await response.json();
+                          throw new Error(error.error || 'Failed to submit form');
+                        }
+
+                        (e.target as HTMLFormElement).reset();
+                        alert('Thank you for your interest! We\'ll contact you soon.');
+                      } catch (error) {
+                        const message = error instanceof Error ? error.message : 'An error occurred';
+                        alert(`Error: ${message}`);
+                      }
+                    }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        placeholder="your@email.com"
+                        className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="phone" className="block text-sm font-medium mb-2">
+                        Phone Number
+                      </label>
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        required
+                        placeholder="+1 (555) 000-0000"
+                        className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                    >
+                      Get In Touch
+                    </Button>
+                  </form>
+                </div>
+              </ScrollAnimate>
             </div>
 
           </div>
