@@ -35,7 +35,8 @@ import {
   FileText,
   CreditCard,
   Trash2,
-  ArrowLeft
+  ArrowLeft,
+  Mail
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { WalletManagement } from "@/components/wallet-management";
@@ -71,11 +72,20 @@ interface DashboardStats {
   }>;
 }
 
+interface ContactInterest {
+  id: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+  status: string;
+}
+
 export default function MasterAdminPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [contactInterests, setContactInterests] = useState<ContactInterest[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newCompany, setNewCompany] = useState({
     name: '',
@@ -104,6 +114,11 @@ export default function MasterAdminPage() {
       const statsRes = await fetch('/api/admin/stats');
       const statsData = await statsRes.json();
       setStats(statsData);
+
+      // Load contact interests
+      const interestsRes = await fetch('/api/admin/contact-interests');
+      const interestsData = await interestsRes.json();
+      setContactInterests(interestsData.interests || []);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -167,6 +182,29 @@ export default function MasterAdminPage() {
       alert('Failed to delete company');
     } finally {
       setDeleting(null);
+    }
+  }
+
+  async function deleteContactInterest(id: string) {
+    if (!confirm('Are you sure you want to delete this contact?')) return;
+
+    try {
+      const res = await fetch('/api/admin/contact-interests', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (res.ok) {
+        setContactInterests(contactInterests.filter(c => c.id !== id));
+      } else {
+        alert('Failed to delete contact interest');
+      }
+    } catch (error) {
+      console.error('Failed to delete contact interest:', error);
+      alert('Failed to delete contact interest');
     }
   }
 
@@ -507,6 +545,60 @@ export default function MasterAdminPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Contact Interests */}
+        {contactInterests.length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-primary" />
+                  <CardTitle>Contact Interests ({contactInterests.length})</CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border border-border/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {contactInterests.map((interest) => (
+                      <TableRow key={interest.id}>
+                        <TableCell className="font-medium">{interest.email}</TableCell>
+                        <TableCell>{interest.phone}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(interest.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="capitalize">
+                            {interest.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteContactInterest(interest.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
