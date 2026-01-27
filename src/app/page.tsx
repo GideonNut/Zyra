@@ -496,12 +496,12 @@ export default function Home() {
                   ].map((currency, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-3"
+                      className="flex items-center gap-4 px-2"
                     >
                       <img 
                         src={currency.logo} 
                         alt={currency.name}
-                        className="w-8 h-8 rounded-full object-cover grayscale brightness-0 invert opacity-80"
+                        className="w-12 h-12 rounded-full object-cover grayscale brightness-0 invert opacity-80"
                         onError={(e) => {
                           // Fallback to a simple circle if image fails to load
                           e.currentTarget.style.display = 'none';
