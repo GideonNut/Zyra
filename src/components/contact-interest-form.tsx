@@ -69,7 +69,7 @@ export function ContactInterestForm() {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           required
-          placeholder="+1 (555) 000-0000"
+          placeholder="+233 24 123 4567"
           disabled={isSubmitting}
           className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
         />
