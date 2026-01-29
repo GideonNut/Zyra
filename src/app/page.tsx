@@ -427,7 +427,7 @@ export default function Home() {
                 <div className="text-center mb-8">
                   <h2 className="text-3xl font-bold mb-3">Supported Currencies</h2>
                 </div>
-                <div className="relative overflow-hidden" style={{maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 85%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, transparent 85%)'}}>
+                <div className="relative overflow-hidden" style={{maskImage: 'linear-gradient(90deg, transparent 0%, black 15%, black 85%, transparent 100%)', WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 15%, black 85%, transparent 100%)'}}>
                 <Marquee pauseOnHover className="[--duration:80s] [--gap:3rem]">
                   {[
                     { 
