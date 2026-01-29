@@ -503,7 +503,7 @@ export default function Home() {
                       <img 
                         src={currency.logo} 
                         alt={currency.name}
-                        className="w-12 h-12 rounded-full object-cover opacity-60"
+                        className="w-12 h-12 rounded-full object-cover opacity-60 grayscale"
                         onError={(e) => {
                           // Fallback to a simple circle if image fails to load
                           e.currentTarget.style.display = 'none';
@@ -741,7 +741,7 @@ export default function Home() {
                     <h4 className="font-semibold mb-4">Follow Us</h4>
                     <div className="flex gap-3">
                       <a
-                        href="https://twitter.com"
+                        href="https://x.com/myzyraxyz"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
