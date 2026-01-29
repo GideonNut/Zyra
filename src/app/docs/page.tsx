@@ -128,6 +128,15 @@ const docs: DocArticle[] = [
     readTime: 5,
     slug: "faq",
   },
+  {
+    id: "13",
+    title: "Converting Crypto to Fiat",
+    description: "How to convert cryptocurrency payments to fiat currency with curated P2P vendors",
+    category: "Payment",
+    lastUpdated: "2026-01-29",
+    readTime: 5,
+    slug: "crypto-to-fiat",
+  },
 ];
 
 const categories = ["All", ...Array.from(new Set(docs.map((doc) => doc.category)))];
