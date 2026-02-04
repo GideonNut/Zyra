@@ -31,8 +31,24 @@ export interface MobileMoneyInvoice {
   };
 }
 
+export interface CryptoInvoice {
+  id: string;
+  title: string;
+  description: string;
+  amount: string;
+  currency: string;
+  paymentMethod: 'crypto';
+  reference: string;
+  customer: Record<string, unknown>;
+  paid_at: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+}
+
+export type Invoice = MobileMoneyInvoice | CryptoInvoice;
+
 // Read all invoices
-export async function getAllInvoices(): Promise<MobileMoneyInvoice[]> {
+export async function getAllInvoices(): Promise<Invoice[]> {
   try {
     const db = getFirestoreInstance();
     const snapshot = await db.collection(COLLECTIONS.MOBILE_MONEY_INVOICES)
@@ -42,7 +58,7 @@ export async function getAllInvoices(): Promise<MobileMoneyInvoice[]> {
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-    })) as MobileMoneyInvoice[];
+    })) as Invoice[];
   } catch (error) {
     console.error('Error fetching invoices from Firestore:', error);
     return [];
@@ -50,17 +66,27 @@ export async function getAllInvoices(): Promise<MobileMoneyInvoice[]> {
 }
 
 // Save a new invoice
-export async function saveInvoice(invoice: Omit<MobileMoneyInvoice, 'id' | 'createdAt'>): Promise<MobileMoneyInvoice> {
+export async function saveInvoice(invoice: Omit<Invoice, 'id' | 'createdAt'>): Promise<Invoice> {
   try {
     const db = getFirestoreInstance();
-    const id = `mobile_money_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const prefix = invoice.paymentMethod === 'crypto' ? 'crypto' : 'mobile_money';
+    const id = `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const createdAt = new Date().toISOString();
     
-    const newInvoice: MobileMoneyInvoice = {
-      ...invoice,
-      id,
-      createdAt,
-    };
+    let newInvoice: Invoice;
+    if (invoice.paymentMethod === 'crypto') {
+      newInvoice = {
+        ...invoice,
+        id,
+        createdAt,
+      } as CryptoInvoice;
+    } else {
+      newInvoice = {
+        ...invoice,
+        id,
+        createdAt,
+      } as MobileMoneyInvoice;
+    }
     
     await db.collection(COLLECTIONS.MOBILE_MONEY_INVOICES).doc(id).set(newInvoice);
     
@@ -72,7 +98,7 @@ export async function saveInvoice(invoice: Omit<MobileMoneyInvoice, 'id' | 'crea
 }
 
 // Get invoice by reference
-export async function getInvoiceByReference(reference: string): Promise<MobileMoneyInvoice | null> {
+export async function getInvoiceByReference(reference: string): Promise<Invoice | null> {
   try {
     const db = getFirestoreInstance();
     const snapshot = await db.collection(COLLECTIONS.MOBILE_MONEY_INVOICES)
@@ -88,7 +114,7 @@ export async function getInvoiceByReference(reference: string): Promise<MobileMo
     return {
       id: doc.id,
       ...doc.data(),
-    } as MobileMoneyInvoice;
+    } as Invoice;
   } catch (error) {
     console.error('Error fetching invoice by reference from Firestore:', error);
     return null;
@@ -96,7 +122,7 @@ export async function getInvoiceByReference(reference: string): Promise<MobileMo
 }
 
 // Get invoices by customer
-export async function getInvoicesByCustomer(customerEmail: string): Promise<MobileMoneyInvoice[]> {
+export async function getInvoicesByCustomer(customerEmail: string): Promise<Invoice[]> {
   try {
     const db = getFirestoreInstance();
     const snapshot = await db.collection(COLLECTIONS.MOBILE_MONEY_INVOICES)
@@ -106,7 +132,7 @@ export async function getInvoicesByCustomer(customerEmail: string): Promise<Mobi
     const invoices = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-    })) as MobileMoneyInvoice[];
+    })) as Invoice[];
     
     // Also check phone_number in metadata
     const phoneSnapshot = await db.collection(COLLECTIONS.MOBILE_MONEY_INVOICES)
@@ -116,7 +142,7 @@ export async function getInvoicesByCustomer(customerEmail: string): Promise<Mobi
     const phoneInvoices = phoneSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-    })) as MobileMoneyInvoice[];
+    })) as Invoice[];
     
     // Combine and deduplicate
     const allInvoices = [...invoices, ...phoneInvoices];

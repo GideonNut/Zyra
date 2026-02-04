@@ -4,6 +4,7 @@ import { saveCompanyInvoice } from '@/lib/company-invoice-storage';
 import { whatsappService } from '@/lib/whatsapp-service';
 import { getWhatsAppConfig } from '@/lib/whatsapp-config';
 import { getBrandBySlug } from '@/lib/brand-storage';
+import { generateReferenceHash, recordTransactionToRegistry } from '@/lib/transaction-recorder';
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,6 +40,38 @@ export async function POST(request: NextRequest) {
 
     // Check if payment was successful
     if (data.data.status === 'success') {
+      // Record transaction to TransactionRegistry on Lisk mainnet
+      try {
+        const amount = BigInt(data.data.amount.toString());
+        const referenceHash = generateReferenceHash(
+          data.data.reference,
+          (data.data.amount / 100).toString(),
+          data.data.metadata?.customer_name || 'Customer',
+          Math.floor(Date.now() / 1000)
+        );
+
+        const registryRecord = await recordTransactionToRegistry({
+          merchant: process.env.NEXT_PUBLIC_RECEIVER_ADDRESS || '0x0000000000000000000000000000000000000000',
+          payer: data.data.customer?.customer_code || '0x0000000000000000000000000000000000000000',
+          amount: amount,
+          token: '0x0000000000000000000000000000000000000000', // LSK native token or USDT
+          referenceHash: referenceHash,
+          paymentMethod: 'mobile_money',
+          paymentReference: data.data.reference,
+          customerName: data.data.metadata?.customer_name || 'Customer',
+          description: data.data.metadata?.description,
+        });
+
+        if (registryRecord.success) {
+          console.log('Transaction recorded to registry:', registryRecord.hash);
+        } else {
+          console.warn('Failed to record transaction to registry:', registryRecord.error);
+        }
+      } catch (registryError) {
+        console.error('Error recording to transaction registry:', registryError);
+        // Don't fail payment verification if registry recording fails
+      }
+
       // Create invoice for successful mobile money payment
       try {
         const invoiceData = {
