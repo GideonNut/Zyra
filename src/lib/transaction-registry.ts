@@ -12,6 +12,7 @@ const LISK_MAINNET = defineChain({
     url: "https://liskscan.com",
     apiUrl: "https://api.liskscan.com/api",
   },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any);
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_TRANSACTION_REGISTRY_ADDRESS || "0x00FE619DD3d5cd516DEC65A629823fc557A6eA9a";
@@ -112,8 +113,8 @@ export const getTransactionRegistryContract = () => {
 };
 
 // Record a transaction
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const recordTransaction = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   account: any,
   merchant: string,
   payer: string,
@@ -149,8 +150,8 @@ export const recordTransaction = async (
 };
 
 // Update transaction status
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const updateTransactionStatus = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   account: any,
   transactionId: bigint,
   status: TransactionStatus
