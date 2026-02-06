@@ -77,6 +77,7 @@ export async function DELETE(
   try {
     // Note: params is required by Next.js even if not used in GET params
     void params; // Suppress unused variable warning
+    const { searchParams } = new URL(request.url);
     const addressId = searchParams.get('id');
 
     if (!addressId) {
