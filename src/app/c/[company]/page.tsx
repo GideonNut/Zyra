@@ -44,7 +44,7 @@ export default function CompanyPage() {
         <div className="flex items-center justify-center min-h-[calc(100vh-120px)]">
           <div className="bg-card border border-border rounded-lg p-8 shadow-lg max-w-md w-full">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-3">Try it out</h2>
+              <h2 className="text-2xl font-bold mb-3">Sign in</h2>
               <p className="text-muted-foreground">Connect your wallet to start creating invoices</p>
             </div>
 
