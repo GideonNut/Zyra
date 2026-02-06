@@ -46,7 +46,7 @@ export async function getCompanyByAddress(address: string): Promise<CompanyWithA
     // Get all addresses for this company
     const allAddresses = await getAllCompanyAddresses(addressData.companySlug);
 
-    const companyName = (company as Record<string, unknown>).name || (company as Record<string, unknown>).id || addressData.companySlug;
+    const companyName = ((company as unknown) as Record<string, unknown>).name || ((company as unknown) as Record<string, unknown>).id || addressData.companySlug;
 
     return {
       slug: addressData.companySlug,
