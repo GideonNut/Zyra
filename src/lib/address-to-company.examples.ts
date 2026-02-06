@@ -5,6 +5,16 @@
  * mapping system for both server-side and client-side operations.
  */
 
+// Imports at top level
+import {
+  getCompanyByAddress,
+  addCompanyAddress,
+  removeCompanyAddress,
+  updateCompanyAddress,
+  getPrimaryCompanyAddress,
+  getAllCompanyAddresses,
+} from '@/lib/address-to-company';
+
 // ============================================================================
 // SERVER-SIDE USAGE (Node.js/Next.js API routes)
 // ============================================================================
@@ -13,8 +23,6 @@
  * Example 1: Lookup a company by blockchain address in an API route
  */
 async function exampleLookupInRoute() {
-  import { getCompanyByAddress } from '@/lib/address-to-company';
-
   const address = '0x1234567890123456789012345678901234567890';
   const company = await getCompanyByAddress(address);
 
@@ -38,8 +46,6 @@ async function exampleLookupInRoute() {
  * Example 2: Add an address to a company
  */
 async function exampleAddAddress() {
-  import { addCompanyAddress } from '@/lib/address-to-company';
-
   try {
     // Add a blockchain address as primary
     const address = await addCompanyAddress(
@@ -59,8 +65,6 @@ async function exampleAddAddress() {
  * Example 3: Get all addresses for a company
  */
 async function exampleGetAllAddresses() {
-  import { getAllCompanyAddresses } from '@/lib/address-to-company';
-
   const companySlug = 'fruity-gold';
   const addresses = await getAllCompanyAddresses(companySlug);
 
@@ -75,8 +79,6 @@ async function exampleGetAllAddresses() {
  * Example 4: Update an address (make it primary)
  */
 async function exampleUpdateAddress() {
-  import { updateCompanyAddress } from '@/lib/address-to-company';
-
   const addressId = 'addr_1234567890_abc123';
   const updated = await updateCompanyAddress(addressId, {
     isPrimary: true
@@ -91,8 +93,6 @@ async function exampleUpdateAddress() {
  * Example 5: Remove an address
  */
 async function exampleRemoveAddress() {
-  import { removeCompanyAddress } from '@/lib/address-to-company';
-
   const addressId = 'addr_1234567890_abc123';
   const success = await removeCompanyAddress(addressId);
 
@@ -105,8 +105,6 @@ async function exampleRemoveAddress() {
  * Example 6: Get the primary address for a company
  */
 async function exampleGetPrimaryAddress() {
-  import { getPrimaryCompanyAddress } from '@/lib/address-to-company';
-
   const companySlug = 'fruity-gold';
   const address = await getPrimaryCompanyAddress(companySlug);
 
