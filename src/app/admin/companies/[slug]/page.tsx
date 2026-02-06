@@ -23,10 +23,12 @@ import {
   MessageSquare,
   Settings,
   Eye,
-  ArrowLeft
+  ArrowLeft,
+  MapPin
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
+import { AddressManager } from "@/components/address-manager";
 
 interface CompanyDetails {
   id: string;
@@ -311,6 +313,19 @@ export default function CompanyAnalyticsPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Address Management */}
+        <Card className="mt-8">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              <CardTitle>Address Management</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <AddressManager companySlug={company.slug} />
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

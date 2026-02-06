@@ -60,5 +60,6 @@ export const COLLECTIONS = {
   COMPANY_INVOICES: 'companyInvoices',
   CRYPTO_INVOICES: 'cryptoInvoices',
   BRANDS: 'brands',
+  COMPANY_ADDRESSES: 'companyAddresses',
 } as const;
 

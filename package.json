@@ -7,7 +7,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup:firestore-indexes": "node scripts/setup-firestore-indexes.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
