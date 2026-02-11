@@ -133,6 +133,8 @@ export default function MasterAdminPage() {
       });
 
       if (res.ok) {
+        const updatedSettings = await res.json();
+        setGlobalSettings(updatedSettings);
         setShowSettingsDialog(false);
         alert('Settings saved successfully!');
       } else {
@@ -353,7 +355,12 @@ export default function MasterAdminPage() {
               </DialogContent>
             </Dialog>
 
-            <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+            <Dialog open={showSettingsDialog} onOpenChange={(open) => {
+              setShowSettingsDialog(open);
+              if (open) {
+                loadGlobalSettings();
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Settings className="h-4 w-4 mr-2" />

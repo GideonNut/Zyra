@@ -1,27 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile, writeFile } from 'fs/promises';
-import { join } from 'path';
+import { getFirestoreInstance } from '@/lib/firestore';
 
 interface GlobalSettings {
   feeRecipient?: string;
+  updatedAt?: number;
 }
 
-const SETTINGS_FILE = join(process.cwd(), 'data', 'global-settings.json');
+const SETTINGS_COLLECTION = 'globalSettings';
+const SETTINGS_DOC = 'platformConfig';
 
 async function readSettings(): Promise<GlobalSettings> {
   try {
-    const content = await readFile(SETTINGS_FILE, 'utf-8');
-    return JSON.parse(content);
-  } catch {
+    const db = getFirestoreInstance();
+    const docRef = db.collection(SETTINGS_COLLECTION).doc(SETTINGS_DOC);
+    const doc = await docRef.get();
+    
+    if (doc.exists) {
+      return doc.data() as GlobalSettings;
+    }
     return {};
+  } catch (error) {
+    console.error('Failed to read settings from Firestore:', error);
+    throw error;
   }
 }
 
 async function writeSettings(settings: GlobalSettings): Promise<void> {
   try {
-    await writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
+    const db = getFirestoreInstance();
+    const docRef = db.collection(SETTINGS_COLLECTION).doc(SETTINGS_DOC);
+    
+    await docRef.set({
+      ...settings,
+      updatedAt: Date.now(),
+    }, { merge: true });
   } catch (error) {
-    console.error('Failed to write settings file:', error);
+    console.error('Failed to write settings to Firestore:', error);
     throw error;
   }
 }
@@ -40,7 +54,8 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     await writeSettings(body);
-    return NextResponse.json(body);
+    const updatedSettings = await readSettings();
+    return NextResponse.json(updatedSettings);
   } catch (error) {
     console.error('Error saving settings:', error);
     return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 });
