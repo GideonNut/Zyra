@@ -789,45 +789,45 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 gap-2 md:gap-4">
             {brand?.assets?.logo?.[theme] ? (
-              <div className="flex items-center gap-3">
-                <span className="text-xl font-bold">Zyra for</span>
+              <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                <span className="text-base md:text-xl font-bold truncate">Zyra for</span>
                 <Image
                   src={brand.assets.logo[theme]!}
                   alt={brand.name || "Company"}
                   width={120}
                   height={24}
-                  className="h-6 w-auto"
+                  className="h-5 md:h-6 w-auto"
                 />
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <FileText className="size-6" />
-                <h1 className="text-xl font-bold">Zyra</h1>
+                <FileText className="size-5 md:size-6" />
+                <h1 className="text-base md:text-xl font-bold">Zyra</h1>
               </div>
             )}
             <ThemeToggle />
           </div>
         </header>
-        <main className="p-8">
-          <div className="mb-6">
-            <h1 className="text-4xl font-bold tracking-tight mb-3">Dashboard</h1>
-            <p className="text-muted-foreground text-lg">Manage your invoices and track payments</p>
+        <main className="p-4 md:p-8">
+          <div className="mb-4 md:mb-6">
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight mb-2 md:mb-3">Dashboard</h1>
+            <p className="text-xs md:text-base text-muted-foreground">Manage your invoices and track payments</p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* Loading Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
               {[1, 2, 3].map((i) => (
                 <Card key={i}>
-                  <CardContent className="px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <div className="h-4 w-20 bg-muted animate-pulse rounded"></div>
-                        <div className="h-8 w-12 bg-muted animate-pulse rounded"></div>
+                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="space-y-2 flex-1">
+                        <div className="h-3 md:h-4 w-16 md:w-20 bg-muted animate-pulse rounded"></div>
+                        <div className="h-6 md:h-8 w-8 md:w-12 bg-muted animate-pulse rounded"></div>
                       </div>
-                      <div className="h-8 w-8 bg-muted animate-pulse rounded"></div>
+                      <div className="h-6 md:h-8 w-6 md:w-8 bg-muted animate-pulse rounded flex-shrink-0"></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -836,41 +836,37 @@ export default function Home() {
 
             {/* Loading Table */}
             <Card className="shadow-lg">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-3 md:pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-semibold">Recent Invoices</CardTitle>
+                  <CardTitle className="text-lg md:text-xl font-semibold">Recent Invoices</CardTitle>
                   <Spinner size="sm" />
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="rounded-lg border border-border/50 overflow-hidden">
+                <div className="rounded-lg border border-border/50 overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30 hover:bg-muted/30 border-border/50">
-                        <TableHead className="font-semibold">Bill To</TableHead>
-                        <TableHead className="font-semibold">Amount</TableHead>
-                        <TableHead className="font-semibold">Chain</TableHead>
-                        <TableHead className="font-semibold">Status</TableHead>
-                        <TableHead className="font-semibold">Created</TableHead>
+                        <TableHead className="font-semibold text-xs md:text-sm">Bill To</TableHead>
+                        <TableHead className="font-semibold text-xs md:text-sm hidden sm:table-cell">Amount</TableHead>
+                        <TableHead className="font-semibold text-xs md:text-sm">Status</TableHead>
+                        <TableHead className="font-semibold text-xs md:text-sm hidden sm:table-cell">Created</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {[1, 2, 3].map((i) => (
                         <TableRow key={i}>
-                          <TableCell className="py-4">
-                            <div className="h-4 w-24 bg-muted animate-pulse rounded"></div>
+                          <TableCell className="py-3 md:py-4">
+                            <div className="h-3 md:h-4 w-20 md:w-24 bg-muted animate-pulse rounded"></div>
                           </TableCell>
-                          <TableCell className="py-4">
-                            <div className="h-4 w-16 bg-muted animate-pulse rounded"></div>
+                          <TableCell className="py-3 md:py-4 hidden sm:table-cell">
+                            <div className="h-3 md:h-4 w-12 md:w-16 bg-muted animate-pulse rounded"></div>
                           </TableCell>
-                          <TableCell className="py-4">
-                            <div className="h-4 w-8 bg-muted animate-pulse rounded"></div>
+                          <TableCell className="py-3 md:py-4">
+                            <div className="h-4 md:h-5 w-10 md:w-12 bg-muted animate-pulse rounded-full"></div>
                           </TableCell>
-                          <TableCell className="py-4">
-                            <div className="h-5 w-12 bg-muted animate-pulse rounded-full"></div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className="h-4 w-20 bg-muted animate-pulse rounded"></div>
+                          <TableCell className="py-3 md:py-4 hidden sm:table-cell">
+                            <div className="h-3 md:h-4 w-16 md:w-20 bg-muted animate-pulse rounded"></div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -888,31 +884,32 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 gap-2 md:gap-4">
           {brand?.assets?.logo?.[theme] ? (
-            <div className="flex items-center gap-3">
-              <span className="text-xl font-bold">Zyra for</span>
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <span className="text-base md:text-xl font-bold truncate">Zyra for</span>
               <Image
                 src={brand.assets.logo[theme]!}
                 alt={brand.name || "Company"}
                 width={120}
                 height={24}
-                className="h-6 w-auto"
+                className="h-5 md:h-6 w-auto"
               />
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <FileText className="size-6" />
-              <h1 className="text-xl font-bold">Zyra</h1>
+              <FileText className="size-5 md:size-6" />
+              <h1 className="text-base md:text-xl font-bold">Zyra</h1>
             </div>
           )}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <ThemeToggle />
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Invoice
+                <Button size="sm" className="text-xs md:text-sm">
+                  <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">Create Invoice</span>
+                  <span className="sm:hidden">Create</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
@@ -922,11 +919,16 @@ export default function Home() {
                 <PaymentForm onSuccess={handleInvoiceCreated} />
               </DialogContent>
             </Dialog>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
+            <div className="hidden sm:flex items-center gap-2 md:gap-3">
+              <span className="text-xs md:text-sm text-muted-foreground truncate">
                 {account.address?.slice(0, 6)}...{account.address?.slice(-4)}
               </span>
-              <DisconnectButton variant="outline" size="sm">
+              <DisconnectButton variant="outline" size="sm" className="text-xs">
+                Disconnect
+              </DisconnectButton>
+            </div>
+            <div className="sm:hidden">
+              <DisconnectButton variant="outline" size="sm" className="text-xs px-2">
                 Disconnect
               </DisconnectButton>
             </div>
@@ -934,52 +936,52 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="p-8">
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold tracking-tight mb-3">Dashboard</h1>
-          <p className="text-muted-foreground text-lg">Manage your invoices and track payments</p>
+      <main className="p-4 md:p-8">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 md:mb-3">Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Manage your invoices and track payments</p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
             <Card>
-              <CardContent className="px-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Invoices</p>
-                    <p className="text-3xl font-bold">{paymentLinks.length + mobileMoneyInvoices.length}</p>
+              <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Total Invoices</p>
+                    <p className="text-2xl md:text-3xl font-bold">{paymentLinks.length + mobileMoneyInvoices.length}</p>
                   </div>
-                  <FileText className="h-8 w-8 text-muted-foreground" />
+                  <FileText className="h-6 md:h-8 w-6 md:w-8 text-muted-foreground flex-shrink-0" />
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="px-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Paid</p>
-                    <p className="text-3xl font-bold text-green-600">
+              <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Paid</p>
+                    <p className="text-2xl md:text-3xl font-bold text-green-600">
                       {paymentLinks.filter(link => getPaymentStatus(link.id) === 'Paid').length + mobileMoneyInvoices.length}
                     </p>
                   </div>
-                  <div className="h-8 w-8 rounded-full bg-green-600/20 border border-green-600/30 flex items-center justify-center">
-                    <Check className="h-4 w-4 text-green-600" />
+                  <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-green-600/20 border border-green-600/30 flex items-center justify-center flex-shrink-0">
+                    <Check className="h-3 md:h-4 w-3 md:w-4 text-green-600" />
                   </div>
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="px-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Pending</p>
-                    <p className="text-3xl font-bold">
+              <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending</p>
+                    <p className="text-2xl md:text-3xl font-bold">
                       {paymentLinks.filter(link => getPaymentStatus(link.id) === 'Unpaid').length}
                     </p>
                   </div>
-                  <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                    <Clock className="h-3 md:h-4 w-3 md:w-4 text-muted-foreground" />
                   </div>
                 </div>
               </CardContent>
@@ -988,8 +990,8 @@ export default function Home() {
 
           {/* Advanced Filter */}
           <Card className="shadow-lg">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl font-semibold">Filter & Search Invoices</CardTitle>
+            <CardHeader className="pb-3 md:pb-4">
+              <CardTitle className="text-lg md:text-xl font-semibold">Filter & Search Invoices</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <AdvancedFilter
@@ -1002,15 +1004,15 @@ export default function Home() {
 
           {/* Invoices Table */}
           <Card className="shadow-lg">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <CardTitle className="text-xl font-semibold">Invoices</CardTitle>
-                  <div className="text-sm text-muted-foreground">
-                    {filteredAndSortedInvoices.length} of {getAllInvoices().length} invoice{getAllInvoices().length !== 1 ? 's' : ''}
+            <CardHeader className="pb-3 md:pb-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <CardTitle className="text-lg md:text-xl font-semibold">Invoices</CardTitle>
+                  <div className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">
+                    {filteredAndSortedInvoices.length} of {getAllInvoices().length}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full md:w-auto">
                   <ExportInvoices invoices={filteredAndSortedInvoices} />
                   <select
                     value={`${sortBy}-${sortOrder}`}
@@ -1020,12 +1022,12 @@ export default function Home() {
                       setSortOrder(order as "asc" | "desc");
                     }}
                     aria-label="Sort invoices"
-                    className="px-3 py-1 text-sm border border-border rounded-md bg-background"
+                    className="px-2 md:px-3 py-1 text-xs md:text-sm border border-border rounded-md bg-background"
                   >
                     <option value="date-desc">Date (Newest)</option>
                     <option value="date-asc">Date (Oldest)</option>
-                    <option value="amount-desc">Amount (High to Low)</option>
-                    <option value="amount-asc">Amount (Low to High)</option>
+                    <option value="amount-desc">Amount (High)</option>
+                    <option value="amount-asc">Amount (Low)</option>
                     <option value="customer-asc">Customer (A-Z)</option>
                     <option value="customer-desc">Customer (Z-A)</option>
                   </select>
@@ -1033,29 +1035,29 @@ export default function Home() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="rounded-lg border border-border/50 overflow-hidden">
+              <div className="rounded-lg border border-border/50 overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30 border-border/50">
-                      <TableHead className="font-semibold">Bill To</TableHead>
-                      <TableHead className="font-semibold">Amount</TableHead>
-                      <TableHead className="font-semibold">Method</TableHead>
-                      <TableHead className="font-semibold">Status</TableHead>
-                      <TableHead className="font-semibold">Created</TableHead>
-                      <TableHead className="font-semibold">Actions</TableHead>
+                      <TableHead className="font-semibold text-xs md:text-sm">Bill To</TableHead>
+                      <TableHead className="font-semibold text-xs md:text-sm hidden sm:table-cell">Amount</TableHead>
+                      <TableHead className="font-semibold text-xs md:text-sm hidden md:table-cell">Method</TableHead>
+                      <TableHead className="font-semibold text-xs md:text-sm">Status</TableHead>
+                      <TableHead className="font-semibold text-xs md:text-sm hidden sm:table-cell">Created</TableHead>
+                      <TableHead className="font-semibold text-xs md:text-sm">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredAndSortedInvoices.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-12">
-                          <div className="flex flex-col items-center gap-3">
-                            <FileText className="h-12 w-12 text-muted-foreground/50" />
-                            <div>
-                              <p className="font-medium text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-8 md:py-12">
+                          <div className="flex flex-col items-center gap-2 md:gap-3">
+                            <FileText className="h-8 md:h-12 w-8 md:w-12 text-muted-foreground/50" />
+                            <div className="px-4">
+                              <p className="font-medium text-muted-foreground text-sm md:text-base">
                                 {getAllInvoices().length === 0 ? "No invoices yet" : "No invoices match your filters"}
                               </p>
-                              <p className="text-sm text-muted-foreground/70">
+                              <p className="text-xs md:text-sm text-muted-foreground/70">
                                 {getAllInvoices().length === 0 
                                   ? "Create your first invoice to get started" 
                                   : "Try adjusting your search criteria"}
@@ -1077,14 +1079,14 @@ export default function Home() {
                             }
                           }}
                         >
-                          <TableCell className="font-medium py-4">
-                            {invoice.paymentMethod === "mobile_money" 
-                              ? invoice.metadata?.customer_name || invoice.title
-                              : invoice.title
-                            }
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <span className="font-mono font-medium">
+                          <TableCell className="font-medium py-3 md:py-4 text-xs md:text-sm">
+                            <div className="truncate">
+                              {invoice.paymentMethod === "mobile_money" 
+                                ? invoice.metadata?.customer_name || invoice.title
+                                : invoice.title
+                              }
+                            </div>
+                            <div className="md:hidden text-xs text-muted-foreground mt-1">
                               {invoice.paymentMethod === "mobile_money" 
                                 ? `${invoice.metadata?.original_amount} ${invoice.metadata?.original_currency}`
                                 : (invoice.priceUsd 
@@ -1093,29 +1095,39 @@ export default function Home() {
                                   : `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
                                 )
                               }
-                            </span>
+                            </div>
                           </TableCell>
-                          <TableCell className="py-4">
-                            <Badge variant="outline" className="text-xs">
+                          <TableCell className="py-3 md:py-4 text-xs md:text-sm hidden sm:table-cell font-mono font-medium">
+                            {invoice.paymentMethod === "mobile_money" 
+                              ? `${invoice.metadata?.original_amount} ${invoice.metadata?.original_currency}`
+                              : (invoice.priceUsd 
+                                ? formatUsdAmount(invoice.amount, invoice.destinationToken?.decimals, invoice.priceUsd) ||
+                                  `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
+                                : `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
+                              )
+                            }
+                          </TableCell>
+                          <TableCell className="py-3 md:py-4 hidden md:table-cell">
+                            <Badge variant="outline" className="text-xs whitespace-nowrap">
                               {invoice.paymentMethod === "mobile_money" 
                                 ? "Mobile Money"
-                                : `Crypto (Chain ${invoice.destinationToken?.chainId})`
+                                : `Crypto`
                               }
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-4">
+                          <TableCell className="py-3 md:py-4">
                             <Badge
                               variant={invoice.status === 'Paid' ? 'default' : 'secondary'}
-                              className={invoice.status === 'Paid' ? 'bg-green-600/20 hover:bg-green-600/20 border border-green-600 text-green-600' : ''}
+                              className={`text-xs whitespace-nowrap ${invoice.status === 'Paid' ? 'bg-green-600/20 hover:bg-green-600/20 border border-green-600 text-green-600' : ''}`}
                             >
-                              {invoice.status === 'Paid' && <Check className="h-3 w-3 mr-1" />}
+                              {invoice.status === 'Paid' && <Check className="h-2 md:h-3 w-2 md:w-3 mr-1" />}
                               {invoice.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-4 text-muted-foreground">
+                          <TableCell className="py-3 md:py-4 text-muted-foreground text-xs md:text-sm hidden sm:table-cell">
                             {formatDate(invoice.createdAt)}
                           </TableCell>
-                          <TableCell className="py-4">
+                          <TableCell className="py-3 md:py-4">
                             {invoice.paymentMethod === "mobile_money" ? (
                               <InvoicePDFGenerator invoice={invoice as unknown as MobileMoneyInvoice} />
                             ) : (
@@ -1126,9 +1138,10 @@ export default function Home() {
                                   e.stopPropagation();
                                   alert('PDF generation for crypto payments coming soon!');
                                 }}
+                                className="text-xs"
                               >
                                 <FileText className="h-3 w-3 mr-1" />
-                                PDF
+                                <span className="hidden sm:inline">PDF</span>
                               </Button>
                             )}
                           </TableCell>
