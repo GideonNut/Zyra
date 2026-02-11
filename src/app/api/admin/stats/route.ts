@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAllBrands } from '@/lib/brand-storage';
 import { getAllCompanyInvoices } from '@/lib/company-invoice-storage';
+import { getAllCompanyCryptoInvoices } from '@/lib/crypto-invoice-storage';
 
 export async function GET() {
   try {
@@ -71,8 +72,8 @@ async function getCompanyStats(slug: string) {
     // Get mobile money invoices
     const mobileMoneyInvoices = await getAllCompanyInvoices(slug);
     
-    // Get crypto invoices (this would need to be implemented based on your storage)
-    const cryptoInvoices = await getCryptoInvoices();
+    // Get crypto invoices for this specific company
+    const cryptoInvoices = await getCryptoInvoices(slug);
     
     const totalInvoices = mobileMoneyInvoices.length + cryptoInvoices.length;
     const totalRevenue = mobileMoneyInvoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || '0'), 0) +
@@ -96,19 +97,19 @@ async function getCompanyStats(slug: string) {
   }
 }
 
-// Helper function to get crypto invoices
-async function getCryptoInvoices() {
+// Helper function to get crypto invoices for a specific company
+async function getCryptoInvoices(slug: string) {
   try {
-    // This would need to be implemented based on how you store crypto invoices
-    // For now, return empty array with proper typing
-    return [] as Array<{
-      id: string;
-      amountUsd: number;
-      createdAt: string;
-      status: string;
-      customerName?: string;
-    }>;
-  } catch {
+    const invoices = await getAllCompanyCryptoInvoices(slug);
+    return invoices.map(invoice => ({
+      id: invoice.id,
+      amountUsd: invoice.priceUsd || 0,
+      createdAt: invoice.createdAt,
+      status: invoice.status,
+      customerName: undefined
+    }));
+  } catch (error) {
+    console.error(`Error getting crypto invoices for ${slug}:`, error);
     return [] as Array<{
       id: string;
       amountUsd: number;
