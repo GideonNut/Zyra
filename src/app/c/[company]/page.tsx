@@ -5,11 +5,23 @@ import { FileText } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useBrand } from "@/contexts/brand-context";
 import { useTheme } from "@/contexts/theme-context";
+import { useActiveAccount } from "thirdweb/react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function CompanyPage() {
-  const { brand } = useBrand();
+  const { brand, slug } = useBrand();
   const { theme } = useTheme();
+  const account = useActiveAccount();
+  const router = useRouter();
+
+  // Redirect to dashboard after successful sign-in
+  useEffect(() => {
+    if (account?.address && slug) {
+      router.replace(`/c/${slug}`);
+    }
+  }, [account?.address, slug, router]);
 
   return (
     <div className="min-h-screen bg-background">
