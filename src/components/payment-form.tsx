@@ -74,6 +74,10 @@ interface PaymentFormProps {
   onSuccess?: () => void;
 }
 
+interface GlobalSettings {
+  feeRecipient?: string;
+}
+
 export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
   const account = useActiveAccount();
   const { brand, slug } = useBrand();
@@ -82,6 +86,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
   const [selectedToken, setSelectedToken] = useState<TokenMetadata | null>(null);
   const [selectedChainId, setSelectedChainId] = useState<number | undefined>(undefined);
   const [paymentMethod, setPaymentMethod] = useState<"mobile_money" | "crypto">("mobile_money");
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings>({});
   
   const form = useForm<FormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -96,6 +101,22 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
       selectedItems: [],
     },
   });
+
+  // Load global settings
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/admin/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setGlobalSettings(data);
+        }
+      } catch (error) {
+        console.error('Failed to load global settings:', error);
+      }
+    }
+    loadSettings();
+  }, []);
 
   // Calculate total from selected items when inventory is enabled
   const watchSelectedItems = form.watch("selectedItems");
@@ -181,8 +202,14 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
           return;
         }
 
-        // Convert amount to smallest units using thirdweb's toUnits function
-        const amountInWei = toUnits(values.amount, selectedToken.decimals).toString();
+        const baseAmount = parseFloat(values.amount);
+        const feePercentage = 0.03; // 3%
+        const feeAmount = baseAmount * feePercentage;
+        const totalAmount = baseAmount + feeAmount;
+
+        // Convert amounts to smallest units using thirdweb's toUnits function
+        const baseAmountInWei = toUnits(baseAmount.toString(), selectedToken.decimals).toString();
+        const feeAmountInWei = toUnits(feeAmount.toString(), selectedToken.decimals).toString();
 
         const response = await fetch('/api/create-payment-link', {
           method: 'POST',
@@ -196,8 +223,18 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
               destinationChainId: selectedChainId,
               destinationTokenAddress: selectedToken.address,
               receiver: brand?.payment?.receiver || account!.address,
-              amount: amountInWei,
+              amount: baseAmountInWei,
             },
+            metadata: {
+              originalAmount: baseAmount,
+              feeAmount: feeAmount,
+              feePercentage: 3,
+              totalAmount: totalAmount,
+            },
+            feeConfig: globalSettings?.feeRecipient ? {
+              feeRecipient: globalSettings.feeRecipient,
+              feeAmountInWei: feeAmountInWei,
+            } : undefined,
           }),
         });
 
@@ -630,6 +667,23 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                   </FormItem>
                 )}
               />
+            )}
+
+            {paymentMethod === "crypto" && form.watch("amount") && (
+              <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Base Amount:</span>
+                  <span className="font-medium">{form.watch("amount")}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Transaction Fee (3%):</span>
+                  <span className="font-medium text-orange-500">+{(parseFloat((form.watch("amount") || "0").toString()) * 0.03).toFixed(4)}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex justify-between">
+                  <span className="font-semibold">Total to Charge:</span>
+                  <span className="font-semibold text-lg">{(parseFloat((form.watch("amount") || "0").toString()) * 1.03).toFixed(4)}</span>
+                </div>
+              </div>
             )}
 
             <Button type="submit" className="w-full" disabled={isCreating}>

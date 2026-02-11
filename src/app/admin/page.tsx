@@ -81,6 +81,10 @@ interface ContactInterest {
   status: string;
 }
 
+interface GlobalSettings {
+  feeRecipient?: string;
+}
+
 export default function MasterAdminPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -88,12 +92,15 @@ export default function MasterAdminPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [contactInterests, setContactInterests] = useState<ContactInterest[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings>({});
   const [newCompany, setNewCompany] = useState({
     name: '',
     slug: '',
     description: ''
   });
   const [creating, setCreating] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -101,7 +108,43 @@ export default function MasterAdminPage() {
 
   useEffect(() => {
     loadDashboardData();
+    loadGlobalSettings();
   }, []);
+
+  async function loadGlobalSettings() {
+    try {
+      const res = await fetch('/api/admin/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setGlobalSettings(data);
+      }
+    } catch (error) {
+      console.error('Failed to load global settings:', error);
+    }
+  }
+
+  async function saveGlobalSettings() {
+    setSavingSettings(true);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(globalSettings),
+      });
+
+      if (res.ok) {
+        setShowSettingsDialog(false);
+        alert('Settings saved successfully!');
+      } else {
+        alert('Failed to save settings');
+      }
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      alert('Failed to save settings');
+    } finally {
+      setSavingSettings(false);
+    }
+  }
 
   async function loadDashboardData() {
     setLoading(true);
@@ -304,6 +347,47 @@ export default function MasterAdminPage() {
                     <Button onClick={createCompany} disabled={creating}>
                       {creating ? <Spinner className="h-4 w-4 mr-2" /> : null}
                       Create Company
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Global Settings
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Global Settings</DialogTitle>
+                  <DialogDescription>
+                    Configure global settings for the entire platform
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="fee-recipient">Master Fee Recipient Address</Label>
+                    <Input
+                      id="fee-recipient"
+                      value={globalSettings.feeRecipient || ''}
+                      onChange={(e) => setGlobalSettings({ ...globalSettings, feeRecipient: e.target.value })}
+                      placeholder="0x... (wallet address)"
+                      className="font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      All 3% transaction fees from crypto invoices will be sent to this address
+                    </p>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={saveGlobalSettings} disabled={savingSettings}>
+                      {savingSettings ? <Spinner className="h-4 w-4 mr-2" /> : null}
+                      Save Settings
                     </Button>
                   </div>
                 </div>
