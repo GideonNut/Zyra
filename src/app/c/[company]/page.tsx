@@ -6,23 +6,26 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useBrand } from "@/contexts/brand-context";
 import { useTheme } from "@/contexts/theme-context";
 import { useActiveAccount } from "thirdweb/react";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Home from "../../page";
 
 export default function CompanyPage() {
-  const { brand, slug } = useBrand();
+  const { brand } = useBrand();
   const { theme } = useTheme();
   const account = useActiveAccount();
-  const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
 
-  // Redirect to dashboard after successful sign-in
   useEffect(() => {
-    if (account?.address && slug) {
-      router.replace(`/c/${slug}`);
-    }
-  }, [account?.address, slug, router]);
+    setIsClient(true);
+  }, []);
 
+  // If user is signed in, show the full dashboard
+  if (isClient && account?.address) {
+    return <Home />;
+  }
+
+  // Otherwise, show the sign-in card
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
