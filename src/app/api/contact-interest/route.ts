@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreInstance } from '@/lib/firestore';
+import { sendWelcomeEmail } from '@/lib/email';
 
 interface InterestFormData {
   email: string;
@@ -37,6 +38,12 @@ export async function POST(request: NextRequest) {
       phone: body.phone,
       createdAt: timestamp,
       status: 'new',
+    });
+
+    // Fire-and-forget welcome email (don't block interest capture)
+    sendWelcomeEmail({ to: body.email.toLowerCase() }).catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('Failed to send welcome email:', msg);
     });
 
     return NextResponse.json(

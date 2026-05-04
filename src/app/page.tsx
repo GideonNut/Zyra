@@ -318,7 +318,41 @@ export default function Home() {
 
         {/* Hero Section */}
         <main className="container mx-auto px-6 py-16">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-6xl mx-auto relative">
+            {/* Absurd.Design illustrations (decorative) */}
+            <div aria-hidden className="pointer-events-none select-none">
+              <Image
+                src="/absurd/absurd-intro-05.jpg"
+                alt=""
+                width={360}
+                height={360}
+                priority
+                className="hidden md:block absolute -top-8 -left-10 w-72 h-72 object-contain opacity-[0.18] dark:opacity-[0.12] blur-[0.2px]"
+              />
+              <Image
+                src="/absurd/absurd-intro-02.jpg"
+                alt=""
+                width={420}
+                height={420}
+                priority
+                className="hidden lg:block absolute -top-12 -right-12 w-[22rem] h-[22rem] object-contain opacity-[0.14] dark:opacity-[0.10]"
+              />
+              <Image
+                src="/absurd/absurd-intro-07.jpg"
+                alt=""
+                width={520}
+                height={520}
+                className="hidden lg:block absolute top-[34rem] -left-16 w-[26rem] h-[26rem] object-contain opacity-[0.10] dark:opacity-[0.08]"
+              />
+              <Image
+                src="/absurd/absurd-intro-03.jpg"
+                alt=""
+                width={520}
+                height={520}
+                className="hidden xl:block absolute top-[40rem] -right-20 w-[28rem] h-[28rem] object-contain opacity-[0.10] dark:opacity-[0.08]"
+              />
+            </div>
+
             <div className="text-center mb-16">
               <ScrollAnimate delay={0}>
                 <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight pb-2">
@@ -527,7 +561,15 @@ export default function Home() {
                   <h2 className="text-3xl font-bold mb-3">Why Choose Zyra?</h2>
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card className="hover:border-primary/50 transition-colors">
+                <Card className="hover:border-primary/50 transition-colors relative overflow-hidden">
+                  <Image
+                    src="/absurd/absurd-intro-08.jpg"
+                    alt=""
+                    aria-hidden
+                    width={260}
+                    height={260}
+                    className="pointer-events-none select-none absolute -right-10 -top-10 w-44 h-44 object-contain opacity-[0.08] dark:opacity-[0.06]"
+                  />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <div className="p-2 rounded-lg bg-primary/10">
@@ -542,7 +584,15 @@ export default function Home() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="hover:border-primary/50 transition-colors">
+                <Card className="hover:border-primary/50 transition-colors relative overflow-hidden">
+                  <Image
+                    src="/absurd/absurd-intro-06.jpg"
+                    alt=""
+                    aria-hidden
+                    width={260}
+                    height={260}
+                    className="pointer-events-none select-none absolute -left-12 -bottom-12 w-48 h-48 object-contain opacity-[0.08] dark:opacity-[0.06]"
+                  />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <div className="p-2 rounded-lg bg-primary/10">
@@ -557,7 +607,15 @@ export default function Home() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="hover:border-primary/50 transition-colors">
+                <Card className="hover:border-primary/50 transition-colors relative overflow-hidden">
+                  <Image
+                    src="/absurd/absurd-intro-01.jpg"
+                    alt=""
+                    aria-hidden
+                    width={260}
+                    height={260}
+                    className="pointer-events-none select-none absolute -right-12 -bottom-12 w-48 h-48 object-contain opacity-[0.08] dark:opacity-[0.06]"
+                  />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <div className="p-2 rounded-lg bg-primary/10">
@@ -766,6 +824,14 @@ export default function Home() {
                 <div className="border-t border-border/50 pt-8 pb-8">
                   <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
                     <p>&copy; 2026 Zyra. All rights reserved.</p>
+                    <a
+                      href="https://absurd.design/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-foreground transition-colors"
+                    >
+                      Illustration(s) from absurd.design.
+                    </a>
                     <div className="flex gap-6">
                       <a href="#" className="hover:text-foreground transition-colors">
                         Privacy Policy
