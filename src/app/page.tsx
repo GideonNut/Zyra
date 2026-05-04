@@ -319,61 +319,43 @@ export default function Home() {
         {/* Hero Section */}
         <main className="container mx-auto px-6 py-16">
           <div className="max-w-6xl mx-auto relative">
-            {/* Absurd.Design illustrations (decorative) */}
-            <div aria-hidden className="pointer-events-none select-none">
-              <Image
-                src="/absurd/absurd-intro-05.jpg"
-                alt=""
-                width={360}
-                height={360}
-                priority
-                className="hidden md:block absolute -top-16 -left-20 w-72 h-72 object-contain opacity-[0.18] dark:opacity-[0.12] blur-[0.2px] scale-x-[-1]"
-              />
-              <Image
-                src="/absurd/absurd-intro-02.jpg"
-                alt=""
-                width={420}
-                height={420}
-                priority
-                className="hidden lg:block absolute -top-20 -right-20 w-[22rem] h-[22rem] object-contain opacity-[0.14] dark:opacity-[0.10] scale-y-[-1]"
-              />
-              <Image
-                src="/absurd/absurd-intro-07.jpg"
-                alt=""
-                width={520}
-                height={520}
-                className="hidden lg:block absolute top-[38rem] -left-24 w-[26rem] h-[26rem] object-contain opacity-[0.10] dark:opacity-[0.08] scale-x-[-1]"
-              />
-              <Image
-                src="/absurd/absurd-intro-03.jpg"
-                alt=""
-                width={520}
-                height={520}
-                className="hidden xl:block absolute top-[44rem] -right-24 w-[28rem] h-[28rem] object-contain opacity-[0.10] dark:opacity-[0.08] scale-y-[-1]"
-              />
-            </div>
+            {/* Hero Grid: Text Left, Image Right */}
+            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+              {/* Left: Text Content */}
+              <div>
+                <ScrollAnimate delay={0}>
+                  <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight pb-2">
+                    Do you guys take momo?
+                  </h1>
+                </ScrollAnimate>
+                <ScrollAnimate delay={200}>
+                  <p className="text-xl text-muted-foreground leading-relaxed mb-8">
+                    Says every Ghanaian when they want to pay for something
+                  </p>
+                </ScrollAnimate>
+                <ScrollAnimate delay={400}>
+                  <h2 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-6 leading-tight pb-2">
+                    Yes, We even take Crypto!
+                  </h2>
+                </ScrollAnimate>
+                <ScrollAnimate delay={600}>
+                  <p className="text-xl text-muted-foreground leading-relaxed">
+                    Says every Zyra user
+                  </p>
+                </ScrollAnimate>
+              </div>
 
-            <div className="text-center mb-16">
-              <ScrollAnimate delay={0}>
-                <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight pb-2">
-                  Do you guys take momo?
-                </h1>
-              </ScrollAnimate>
-              <ScrollAnimate delay={200}>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-6">
-                  Says every Ghanaian when they want to pay for something
-                </p>
-              </ScrollAnimate>
-              <ScrollAnimate delay={400}>
-                <h2 className="text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-6 leading-tight pb-2">
-                  Yes, We even take Crypto!
-                </h2>
-              </ScrollAnimate>
-              <ScrollAnimate delay={600}>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                  Says every Zyra user
-                </p>
-              </ScrollAnimate>
+              {/* Right: Large Illustration */}
+              <div className="hidden md:flex justify-center">
+                <Image
+                  src="/absurd/absurd-intro-04.jpg"
+                  alt="Absurd Design Illustration"
+                  width={500}
+                  height={500}
+                  priority
+                  className="w-full h-auto object-contain"
+                />
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-16 items-center mb-20">
