@@ -327,7 +327,7 @@ export default function Home() {
                 width={360}
                 height={360}
                 priority
-                className="hidden md:block absolute -top-8 -left-10 w-72 h-72 object-contain opacity-[0.18] dark:opacity-[0.12] blur-[0.2px]"
+                className="hidden md:block absolute -top-16 -left-20 w-72 h-72 object-contain opacity-[0.18] dark:opacity-[0.12] blur-[0.2px] scale-x-[-1]"
               />
               <Image
                 src="/absurd/absurd-intro-02.jpg"
@@ -335,21 +335,21 @@ export default function Home() {
                 width={420}
                 height={420}
                 priority
-                className="hidden lg:block absolute -top-12 -right-12 w-[22rem] h-[22rem] object-contain opacity-[0.14] dark:opacity-[0.10]"
+                className="hidden lg:block absolute -top-20 -right-20 w-[22rem] h-[22rem] object-contain opacity-[0.14] dark:opacity-[0.10] scale-y-[-1]"
               />
               <Image
                 src="/absurd/absurd-intro-07.jpg"
                 alt=""
                 width={520}
                 height={520}
-                className="hidden lg:block absolute top-[34rem] -left-16 w-[26rem] h-[26rem] object-contain opacity-[0.10] dark:opacity-[0.08]"
+                className="hidden lg:block absolute top-[38rem] -left-24 w-[26rem] h-[26rem] object-contain opacity-[0.10] dark:opacity-[0.08] scale-x-[-1]"
               />
               <Image
                 src="/absurd/absurd-intro-03.jpg"
                 alt=""
                 width={520}
                 height={520}
-                className="hidden xl:block absolute top-[40rem] -right-20 w-[28rem] h-[28rem] object-contain opacity-[0.10] dark:opacity-[0.08]"
+                className="hidden xl:block absolute top-[44rem] -right-24 w-[28rem] h-[28rem] object-contain opacity-[0.10] dark:opacity-[0.08] scale-y-[-1]"
               />
             </div>
 
@@ -568,7 +568,7 @@ export default function Home() {
                     aria-hidden
                     width={260}
                     height={260}
-                    className="pointer-events-none select-none absolute -right-10 -top-10 w-44 h-44 object-contain opacity-[0.08] dark:opacity-[0.06]"
+                    className="pointer-events-none select-none absolute -right-14 -top-14 w-44 h-44 object-contain opacity-[0.08] dark:opacity-[0.06] scale-x-[-1]"
                   />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -591,7 +591,7 @@ export default function Home() {
                     aria-hidden
                     width={260}
                     height={260}
-                    className="pointer-events-none select-none absolute -left-12 -bottom-12 w-48 h-48 object-contain opacity-[0.08] dark:opacity-[0.06]"
+                    className="pointer-events-none select-none absolute -left-14 -bottom-14 w-48 h-48 object-contain opacity-[0.08] dark:opacity-[0.06] scale-y-[-1]"
                   />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -614,7 +614,7 @@ export default function Home() {
                     aria-hidden
                     width={260}
                     height={260}
-                    className="pointer-events-none select-none absolute -right-12 -bottom-12 w-48 h-48 object-contain opacity-[0.08] dark:opacity-[0.06]"
+                    className="pointer-events-none select-none absolute -right-14 -bottom-14 w-48 h-48 object-contain opacity-[0.08] dark:opacity-[0.06] scale-x-[-1] scale-y-[-1]"
                   />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
