@@ -294,23 +294,15 @@ export default function Home() {
         <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              {brand?.assets?.logo?.[theme] ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-xl font-bold">Zyra for</span>
-                  <Image
-                    src={brand.assets.logo[theme]!}
-                    alt={brand.name || "Company"}
-                    width={120}
-                    height={24}
-                    className="h-6 w-auto"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <FileText className="size-6" />
-                  <h1 className="text-xl font-bold">Zyra</h1>
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                <Image
+                  src="/Zyra-logo.png"
+                  alt="Zyra"
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto"
+                />
+              </div>
               <ThemeToggle />
             </div>
           </div>
@@ -616,6 +608,21 @@ export default function Home() {
               </div>
             </ScrollAnimate>
 
+            {/* Interest Form Section */}
+            <ScrollAnimate delay={0}>
+              <div className="mt-20 mb-20 max-w-2xl mx-auto">
+                <div className="bg-muted/30 border border-border/50 rounded-lg p-8 md:p-12">
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl md:text-3xl font-bold mb-3">Interested in Zyra?</h3>
+                    <p className="text-muted-foreground">
+                      Leave your contact information and we&apos;ll get in touch with you soon
+                    </p>
+                  </div>
+                  <ContactInterestForm />
+                </div>
+              </div>
+            </ScrollAnimate>
+
             {/* FAQs Section */}
             <div className="mb-20">
               <ScrollAnimate delay={0}>
@@ -702,20 +709,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Interest Form Section */}
-            <div className="mt-20 max-w-2xl mx-auto">
-              <ScrollAnimate delay={0}>
-                <div className="bg-muted/30 border border-border/50 rounded-lg p-8 md:p-12">
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl md:text-3xl font-bold mb-3">Interested in Zyra?</h3>
-                    <p className="text-muted-foreground">
-                      Leave your contact information and we&apos;ll get in touch with you soon
-                    </p>
-                  </div>
-                  <ContactInterestForm />
-                </div>
-              </ScrollAnimate>
-            </div>
+
 
             {/* Footer */}
             <footer className="mt-32 pt-16 border-t border-border/50">
@@ -933,23 +927,15 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 gap-2 md:gap-4">
-          {brand?.assets?.logo?.[theme] ? (
-            <div className="flex items-center gap-2 md:gap-3 min-w-0">
-              <span className="text-base md:text-xl font-bold truncate">Zyra for</span>
-              <Image
-                src={brand.assets.logo[theme]!}
-                alt={brand.name || "Company"}
-                width={120}
-                height={24}
-                className="h-5 md:h-6 w-auto"
-              />
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <FileText className="size-5 md:size-6" />
-              <h1 className="text-base md:text-xl font-bold">Zyra</h1>
-            </div>
-          )}
+          <div className="flex items-center gap-2 md:gap-3">
+            <Image
+              src="/Zyra-logo.png"
+              alt="Zyra"
+              width={120}
+              height={40}
+              className="h-7 md:h-8 w-auto"
+            />
+          </div>
           <div className="flex items-center gap-2 md:gap-4">
             <ThemeToggle />
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
