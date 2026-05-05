@@ -12,6 +12,7 @@ This project uses `pnpm` for package management.
 Required environment variables:
 - `NEXT_PUBLIC_THIRDWEB_CLIENT_ID` - Thirdweb client ID for frontend
 - `THIRDWEB_SECRET_KEY` - Thirdweb secret key for payment link creation
+- `MASTER_ADMIN_PASSWORD` - Master admin password for admin panel access
 
 ## Development Guidelines
 - **Never hardcode token addresses** - Use Bridge.tokens with only chainId to get all tokens for a chain
