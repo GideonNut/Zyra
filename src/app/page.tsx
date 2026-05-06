@@ -718,8 +718,13 @@ export default function Home() {
                   {/* Brand */}
                   <div>
                     <div className="flex items-center gap-2 mb-4">
-                      <FileText className="h-6 w-6 text-primary" />
-                      <h3 className="text-lg font-bold">Zyra</h3>
+                      <Image
+                        src="/zyra-logo.png"
+                        alt="Zyra"
+                        width={100}
+                        height={32}
+                        className="h-6 w-auto"
+                      />
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Modern invoicing made simple. Accept payments via mobile money and crypto.
