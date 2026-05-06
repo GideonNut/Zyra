@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { FileText, Plus, Check, Clock, Settings, Twitter, Send } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
@@ -111,6 +112,7 @@ export default function Home() {
   const [mobileMoneyInvoices, setMobileMoneyInvoices] = useState<MobileMoneyInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showInterestFormAfterInvoice, setShowInterestFormAfterInvoice] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: [],
@@ -236,6 +238,7 @@ export default function Home() {
 
   const handleInvoiceCreated = () => {
     setIsModalOpen(false);
+    setShowInterestFormAfterInvoice(true);
     fetchData(); // Refresh the data
   };
 
@@ -958,6 +961,22 @@ export default function Home() {
                 <PaymentForm onSuccess={handleInvoiceCreated} />
               </DialogContent>
             </Dialog>
+
+            {/* Interest Form Dialog - Shows after creating an invoice */}
+            <Dialog open={showInterestFormAfterInvoice} onOpenChange={setShowInterestFormAfterInvoice}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Customize Your Zyra Experience</DialogTitle>
+                  <DialogDescription>
+                    To customize Zyra for your business, please share your details with us
+                  </DialogDescription>
+                </DialogHeader>
+                <ContactInterestForm 
+                  onSuccess={() => setShowInterestFormAfterInvoice(false)}
+                />
+              </DialogContent>
+            </Dialog>
+
             <div className="hidden sm:flex items-center gap-2 md:gap-3">
               <span className="text-xs md:text-sm text-muted-foreground truncate">
                 {account.address?.slice(0, 6)}...{account.address?.slice(-4)}

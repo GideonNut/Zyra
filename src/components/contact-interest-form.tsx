@@ -4,10 +4,18 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
-export function ContactInterestForm() {
+export function ContactInterestForm({ 
+  initialEmail?: string,
+  initialPhone?: string,
+  onSuccess?: () => void 
+}: { 
+  initialEmail?: string;
+  initialPhone?: string;
+  onSuccess?: () => void;
+} = {}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState(initialEmail || "");
+  const [phone, setPhone] = useState(initialPhone || "");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,6 +42,11 @@ export function ContactInterestForm() {
       setEmail("");
       setPhone("");
       alert("Thank you for your interest! We'll contact you soon.");
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "An error occurred";
       alert(`Error: ${message}`);
