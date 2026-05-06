@@ -4,18 +4,20 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
-export function ContactInterestForm({ 
-  initialEmail?: string,
-  initialPhone?: string,
-  onSuccess?: () => void 
-}: { 
+interface ContactInterestFormProps {
   initialEmail?: string;
   initialPhone?: string;
   onSuccess?: () => void;
-} = {}) {
+}
+
+export function ContactInterestForm({ 
+  initialEmail = "",
+  initialPhone = "",
+  onSuccess
+}: ContactInterestFormProps = {}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [email, setEmail] = useState(initialEmail || "");
-  const [phone, setPhone] = useState(initialPhone || "");
+  const [email, setEmail] = useState(initialEmail);
+  const [phone, setPhone] = useState(initialPhone);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
