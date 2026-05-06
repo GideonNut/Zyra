@@ -296,7 +296,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/Zyra-logo.png"
+                  src="/zyra-logo.png"
                   alt="Zyra"
                   width={120}
                   height={40}
@@ -929,7 +929,7 @@ export default function Home() {
         <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 gap-2 md:gap-4">
           <div className="flex items-center gap-2 md:gap-3">
             <Image
-              src="/Zyra-logo.png"
+              src="/zyra-logo.png"
               alt="Zyra"
               width={120}
               height={40}
