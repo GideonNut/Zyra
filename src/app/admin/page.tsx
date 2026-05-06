@@ -87,6 +87,9 @@ interface GlobalSettings {
 
 export default function MasterAdminPage() {
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -107,9 +110,43 @@ export default function MasterAdminPage() {
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
 
   useEffect(() => {
-    loadDashboardData();
-    loadGlobalSettings();
+    // Check if already authenticated (session stored)
+    const isAuth = sessionStorage.getItem('adminAuthenticated');
+    if (isAuth === 'true') {
+      setIsAuthenticated(true);
+      loadDashboardData();
+      loadGlobalSettings();
+    } else {
+      setLoading(false);
+    }
   }, []);
+
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput }),
+      });
+
+      if (res.ok) {
+        sessionStorage.setItem('adminAuthenticated', 'true');
+        setIsAuthenticated(true);
+        setPasswordInput("");
+        setLoading(true);
+        loadDashboardData();
+        loadGlobalSettings();
+      } else {
+        setAuthError('Invalid password. Please try again.');
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      setAuthError('Authentication failed. Please try again.');
+    }
+  }
 
   async function loadGlobalSettings() {
     try {
@@ -257,6 +294,41 @@ export default function MasterAdminPage() {
   function handleDeleteClick(company: Company) {
     setCompanyToDelete(company);
     setShowDeleteDialog(true);
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl">Master Admin Access</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Admin Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter master admin password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
+              {authError && (
+                <div className="text-sm text-destructive">{authError}</div>
+              )}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? <Spinner className="h-4 w-4 mr-2" /> : null}
+                Access Admin Panel
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (loading) {

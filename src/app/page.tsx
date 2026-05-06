@@ -312,7 +312,7 @@ export default function Home() {
         <main className="container mx-auto px-6 py-16">
           <div className="max-w-6xl mx-auto relative">
             {/* Hero Grid: Text Left, Image Right */}
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-20">
               {/* Left: Text Content */}
               <div>
                 <ScrollAnimate delay={0}>
@@ -338,14 +338,14 @@ export default function Home() {
               </div>
 
               {/* Right: Large Illustration */}
-              <div className="hidden md:flex justify-center">
+              <div className="flex justify-center">
                 <Image
                   src="/absurd/absurd-intro-04.jpg"
                   alt="Absurd Design Illustration"
                   width={500}
                   height={500}
                   priority
-                  className="w-full h-auto object-contain"
+                  className="w-full max-w-xs md:max-w-none h-auto object-contain"
                 />
               </div>
             </div>
@@ -542,7 +542,7 @@ export default function Home() {
                     aria-hidden
                     width={260}
                     height={260}
-                    className="pointer-events-none select-none absolute -right-14 -top-14 w-44 h-44 object-contain opacity-[0.08] dark:opacity-[0.06] scale-x-[-1]"
+                    className="pointer-events-none select-none absolute -right-8 sm:-right-14 -top-8 sm:-top-14 w-32 sm:w-44 h-32 sm:h-44 object-contain opacity-[0.08] dark:opacity-[0.06] scale-x-[-1]"
                   />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -565,7 +565,7 @@ export default function Home() {
                     aria-hidden
                     width={260}
                     height={260}
-                    className="pointer-events-none select-none absolute -left-14 -bottom-14 w-48 h-48 object-contain opacity-[0.08] dark:opacity-[0.06] scale-y-[-1]"
+                    className="pointer-events-none select-none absolute -left-8 sm:-left-14 -bottom-8 sm:-bottom-14 w-32 sm:w-48 h-32 sm:h-48 object-contain opacity-[0.08] dark:opacity-[0.06] scale-y-[-1]"
                   />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -588,7 +588,7 @@ export default function Home() {
                     aria-hidden
                     width={260}
                     height={260}
-                    className="pointer-events-none select-none absolute -right-14 -bottom-14 w-48 h-48 object-contain opacity-[0.08] dark:opacity-[0.06] scale-x-[-1] scale-y-[-1]"
+                    className="pointer-events-none select-none absolute -right-8 sm:-right-14 -bottom-8 sm:-bottom-14 w-32 sm:w-48 h-32 sm:h-48 object-contain opacity-[0.08] dark:opacity-[0.06] scale-x-[-1] scale-y-[-1]"
                   />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
