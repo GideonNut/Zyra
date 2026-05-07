@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { WalletManagement } from "@/components/wallet-management";
+import { EmailManager } from "@/components/email-manager";
 
 interface Company {
   id: string;
@@ -108,6 +109,7 @@ export default function MasterAdminPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "emails">("dashboard");
 
   useEffect(() => {
     // Check if already authenticated (session stored)
@@ -477,6 +479,27 @@ export default function MasterAdminPage() {
       </header>
 
       <main className="container mx-auto px-6 py-8">
+        {/* Tab Navigation */}
+        <div className="flex gap-4 mb-8 border-b border-border/50">
+          <Button
+            variant={activeTab === "dashboard" ? "default" : "ghost"}
+            onClick={() => setActiveTab("dashboard")}
+            className="rounded-b-none"
+          >
+            Dashboard
+          </Button>
+          <Button
+            variant={activeTab === "emails" ? "default" : "ghost"}
+            onClick={() => setActiveTab("emails")}
+            className="rounded-b-none"
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Send Emails
+          </Button>
+        </div>
+
+        {activeTab === "dashboard" ? (
+          <>
         {/* Wallet Management */}
         <div className="mb-8">
           <WalletManagement />
@@ -833,6 +856,10 @@ export default function MasterAdminPage() {
             </CardContent>
           </Card>
         ) : null}
+          </>
+        ) : (
+          <EmailManager contacts={contactInterests} />
+        )}
       </main>
     </div>
   );
