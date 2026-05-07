@@ -70,6 +70,16 @@ export default function WelcomeEmail({
               Zyra
               <br />
               Modern invoicing for businesses in Ghana
+              <br />
+              <br />
+              <Link
+                href={`${appUrl}/unsubscribe`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.unsubscribeLink}
+              >
+                Unsubscribe
+              </Link>
             </Text>
           </Section>
         </Container>
@@ -114,6 +124,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '1em',
     paddingTop: '0.5em',
     paddingBottom: '0.5em',
+  },
+  unsubscribeLink: {
+    color: '#6b7280',
+    textDecoration: 'underline',
+    fontSize: '0.875em',
   },
 };
 

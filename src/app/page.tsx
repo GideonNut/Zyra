@@ -808,14 +808,6 @@ export default function Home() {
                 <div className="border-t border-border/50 pt-8 pb-8">
                   <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
                     <p>&copy; 2026 Zyra. All rights reserved.</p>
-                    <a
-                      href="https://absurd.design/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-foreground transition-colors"
-                    >
-                      Illustration(s) from absurd.design.
-                    </a>
                     <div className="flex gap-6">
                       <a href="#" className="hover:text-foreground transition-colors">
                         Privacy Policy
