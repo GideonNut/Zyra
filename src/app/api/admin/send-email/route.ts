@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getFirestoreInstance } from '@/lib/firestore';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(request: NextRequest) {
   try {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'Email service is not configured' },
+        { status: 503 }
+      );
+    }
+    const resend = new Resend(apiKey);
+
     const { recipientIds, subject, body } = await request.json();
 
     if (!recipientIds || !Array.isArray(recipientIds) || recipientIds.length === 0) {
