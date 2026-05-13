@@ -32,18 +32,21 @@ export async function GET(
 
     try {
       const db = getFirestoreInstance();
-      const splitSnap = await db.collection(COLLECTIONS.PAYMENT_LINK_FEES).doc(id).get();
-      if (splitSnap.exists && data?.data) {
+      const breakdownSnap = await db
+        .collection(COLLECTIONS.PAYMENT_LINK_BREAKDOWN)
+        .doc(id)
+        .get();
+      if (breakdownSnap.exists && data?.data) {
         return NextResponse.json({
           ...data,
           data: {
             ...data.data,
-            splitFee: splitSnap.data(),
+            invoiceBreakdown: breakdownSnap.data(),
           },
         });
       }
     } catch (mergeErr) {
-      console.warn('payment-link GET: could not merge fee split metadata:', mergeErr);
+      console.warn('payment-link GET: could not merge invoice breakdown:', mergeErr);
     }
 
     return NextResponse.json(data);

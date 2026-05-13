@@ -210,6 +210,10 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
         // Convert amounts to smallest units using thirdweb's toUnits function
         const baseAmountInWei = toUnits(baseAmount.toString(), selectedToken.decimals).toString();
         const feeAmountInWei = toUnits(feeAmount.toString(), selectedToken.decimals).toString();
+        const includesPlatformFee = Boolean(globalSettings?.feeRecipient);
+        const totalAmountInWei = includesPlatformFee
+          ? (BigInt(baseAmountInWei) + BigInt(feeAmountInWei)).toString()
+          : baseAmountInWei;
 
         const response = await fetch('/api/create-payment-link', {
           method: 'POST',
@@ -223,7 +227,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
               destinationChainId: selectedChainId,
               destinationTokenAddress: selectedToken.address,
               receiver: brand?.payment?.receiver || account!.address,
-              amount: baseAmountInWei,
+              amount: totalAmountInWei,
             },
             metadata: {
               originalAmount: baseAmount,
@@ -231,10 +235,13 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
               feePercentage: 3,
               totalAmount: totalAmount,
             },
-            feeConfig: globalSettings?.feeRecipient ? {
-              feeRecipient: globalSettings.feeRecipient,
-              feeAmountInWei: feeAmountInWei,
-            } : undefined,
+            feeBreakdown: includesPlatformFee
+              ? {
+                  baseAmountWei: baseAmountInWei,
+                  feeAmountWei: feeAmountInWei,
+                  feePercentage: 3,
+                }
+              : undefined,
           }),
         });
 
@@ -684,7 +691,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                   <span className="font-semibold text-lg">{(parseFloat((form.watch("amount") || "0").toString()) * 1.03).toFixed(4)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground pt-1">
-                  The customer invoice will show both the merchant payment and this fee as separate steps.
+                  The customer pays this total in a single crypto payment; the invoice shows the fee as a separate line for clarity.
                 </p>
               </div>
             )}

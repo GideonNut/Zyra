@@ -450,16 +450,16 @@ export default function MasterAdminPage() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="fee-recipient">Master Fee Recipient Address</Label>
+                    <Label htmlFor="fee-recipient">Zyra processing fee (3%)</Label>
                     <Input
                       id="fee-recipient"
                       value={globalSettings.feeRecipient || ''}
                       onChange={(e) => setGlobalSettings({ ...globalSettings, feeRecipient: e.target.value })}
-                      placeholder="0x... (wallet address)"
+                      placeholder="0x... (wallet address — used as reference / settlement)"
                       className="font-mono"
                     />
                     <p className="text-xs text-muted-foreground mt-2">
-                      All 3% transaction fees from crypto invoices will be sent to this address
+                      When this field is set, crypto invoice totals include a 3% processing fee. The customer pays once to the merchant wallet; the invoice shows the fee as a separate line. This address is not auto-paid on-chain — use it for your Zyra settlement process.
                     </p>
                   </div>
                   <div className="flex justify-end gap-2">
