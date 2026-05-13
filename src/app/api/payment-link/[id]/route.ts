@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getFirestoreInstance, COLLECTIONS } from '@/lib/firestore';
 
 export async function GET(
   request: NextRequest,
@@ -28,6 +29,23 @@ export async function GET(
     }
 
     const data = await response.json();
+
+    try {
+      const db = getFirestoreInstance();
+      const splitSnap = await db.collection(COLLECTIONS.PAYMENT_LINK_FEES).doc(id).get();
+      if (splitSnap.exists && data?.data) {
+        return NextResponse.json({
+          ...data,
+          data: {
+            ...data.data,
+            splitFee: splitSnap.data(),
+          },
+        });
+      }
+    } catch (mergeErr) {
+      console.warn('payment-link GET: could not merge fee split metadata:', mergeErr);
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching payment link:', error);

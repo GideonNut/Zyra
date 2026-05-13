@@ -669,7 +669,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
               />
             )}
 
-            {paymentMethod === "crypto" && form.watch("amount") && (
+            {paymentMethod === "crypto" && form.watch("amount") && globalSettings.feeRecipient && (
               <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Base Amount:</span>
@@ -683,7 +683,15 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                   <span className="font-semibold">Total to Charge:</span>
                   <span className="font-semibold text-lg">{(parseFloat((form.watch("amount") || "0").toString()) * 1.03).toFixed(4)}</span>
                 </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  The customer invoice will show both the merchant payment and this fee as separate steps.
+                </p>
               </div>
+            )}
+            {paymentMethod === "crypto" && form.watch("amount") && !globalSettings.feeRecipient && (
+              <p className="text-xs text-muted-foreground rounded-md border border-dashed border-border p-3">
+                Set the Master Fee Recipient in the admin panel to collect the 3% Zyra processing fee on-chain. Until then, invoices use a single payment for the amount you enter above.
+              </p>
             )}
 
             <Button type="submit" className="w-full" disabled={isCreating}>

@@ -61,5 +61,7 @@ export const COLLECTIONS = {
   CRYPTO_INVOICES: 'cryptoInvoices',
   BRANDS: 'brands',
   COMPANY_ADDRESSES: 'companyAddresses',
+  /** Maps main crypto payment link id → Zyra fee payment link (same chain/token). */
+  PAYMENT_LINK_FEES: 'paymentLinkFees',
 } as const;
 

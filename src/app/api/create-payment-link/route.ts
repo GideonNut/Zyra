@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getFirestoreInstance, COLLECTIONS } from '@/lib/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,8 +19,8 @@ export async function POST(request: NextRequest) {
             'x-secret-key': process.env.THIRDWEB_SECRET_KEY!,
           },
           body: JSON.stringify({
-            title: `${title} - Base Payment`,
-            description: description,
+            title,
+            description,
             intent,
           }),
         });
@@ -64,6 +65,23 @@ export async function POST(request: NextRequest) {
         }
 
         const feeData = await feeResponse.json();
+
+        const main = mainData.data as { id: string; link?: string };
+        const fee = feeData.data as { id: string; link?: string };
+        try {
+          const db = getFirestoreInstance();
+          await db.collection(COLLECTIONS.PAYMENT_LINK_FEES).doc(main.id).set({
+            mainPaymentLinkId: main.id,
+            feePaymentLinkId: fee.id,
+            feeLink: fee.link ?? '',
+            feeAmountWei: feeConfig.feeAmountInWei,
+            mainAmountWei: intent.amount,
+            feePercentage: 3,
+            createdAt: new Date().toISOString(),
+          });
+        } catch (persistErr) {
+          console.error('Could not persist fee payment link mapping:', persistErr);
+        }
 
         // Return both payment links
         return NextResponse.json({
