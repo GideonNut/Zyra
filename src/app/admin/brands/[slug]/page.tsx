@@ -4,6 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import * as XLSX from "xlsx";
 import { Upload, FileSpreadsheet, AlertCircle, ArrowLeft } from "lucide-react";
 
@@ -82,8 +88,6 @@ export default function BrandEditorPage() {
         body: JSON.stringify(brand),
       });
       if (!res.ok) throw new Error("Failed to save brand");
-      // After save, navigate to branded page in new tab
-      window.open(`/c/${slug}`, "_blank");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to save brand";
       setError(message);
@@ -264,11 +268,271 @@ export default function BrandEditorPage() {
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>General</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Accordion type="multiple" defaultValue={["inventory"]} className="space-y-3">
+          <AccordionItem value="inventory" className="border border-border rounded-lg bg-card px-4">
+            <AccordionTrigger className="py-4 hover:no-underline">
+              <span className="text-lg font-semibold">Inventory Management</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                  <label htmlFor="inventory-enabled" className="text-sm text-muted-foreground">
+                    Enable Inventory Management
+                  </label>
+                  <input
+                    id="inventory-enabled"
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={!!brand.inventory?.enabled}
+                    onChange={(e) => setBrand({
+                      ...brand,
+                      inventory: { 
+                        ...(brand.inventory || {}), 
+                        enabled: e.target.checked,
+                        items: brand.inventory?.items || []
+                      }
+                    })}
+                  />
+                </div>
+
+                {brand.inventory?.enabled && (
+                  <div className="mt-4 space-y-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                      <h3 className="font-medium">Inventory Items</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                        >
+                          {uploading ? (
+                            <>
+                              <FileSpreadsheet className="h-4 w-4 mr-2 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload Excel
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            const newItem: InventoryItem = {
+                              id: `item-${Date.now()}`,
+                              name: '',
+                              price: 0,
+                              quantity: 0
+                            };
+                            setBrand({
+                              ...brand,
+                              inventory: {
+                                ...brand.inventory!,
+                                items: [...(brand.inventory?.items || []), newItem]
+                              }
+                            });
+                          }}
+                        >
+                          + Add Item
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={onSave}
+                          disabled={saving}
+                        >
+                          {saving ? "Saving..." : "Save inventory"}
+                        </Button>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        onChange={handleExcelUpload}
+                        className="hidden"
+                        id="excel-upload"
+                        aria-label="Upload inventory Excel file"
+                        aria-hidden="true"
+                        disabled={uploading}
+                      />
+                    </div>
+
+                    {uploadError && (
+                      <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>{uploadError}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-auto"
+                          onClick={() => setUploadError(null)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      <p className="font-medium mb-1">Excel File Format:</p>
+                      <p>Your Excel file should have columns: <strong>Name</strong> (required), <strong>Price</strong> (required), <strong>Quantity</strong>, <strong>Description</strong>, <strong>SKU</strong>, <strong>Image URL</strong></p>
+                      <p className="mt-1 text-xs">Column names are case-insensitive and can include variations like &quot;Item Name&quot;, &quot;Product&quot;, &quot;Cost&quot;, &quot;Qty&quot;, etc.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {brand.inventory?.items?.map((item, index) => (
+                        <div key={item.id} className="border rounded-lg p-4 space-y-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm text-muted-foreground">Name</label>
+                              <input
+                                className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                                value={item.name}
+                                onChange={(e) => {
+                                  const items = [...(brand.inventory?.items || [])];
+                                  items[index] = { ...item, name: e.target.value };
+                                  setBrand({
+                                    ...brand,
+                                    inventory: { ...brand.inventory!, items }
+                                  });
+                                }}
+                                placeholder="Item name"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm text-muted-foreground">SKU (Optional)</label>
+                              <input
+                                className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                                value={item.sku || ''}
+                                onChange={(e) => {
+                                  const items = [...(brand.inventory?.items || [])];
+                                  items[index] = { ...item, sku: e.target.value };
+                                  setBrand({
+                                    ...brand,
+                                    inventory: { ...brand.inventory!, items }
+                                  });
+                                }}
+                                placeholder="SKU-123"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-sm text-muted-foreground">Description (Optional)</label>
+                            <textarea
+                              className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                              value={item.description || ''}
+                              onChange={(e) => {
+                                const items = [...(brand.inventory?.items || [])];
+                                items[index] = { ...item, description: e.target.value };
+                                setBrand({
+                                  ...brand,
+                                  inventory: { ...brand.inventory!, items }
+                                });
+                              }}
+                              placeholder="Item description"
+                              rows={2}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label htmlFor={`price-${item.id}`} className="text-sm text-muted-foreground">
+                                Price (GHS)
+                              </label>
+                              <div className="relative mt-1">
+                                <span className="absolute left-3 top-2 text-muted-foreground">₵</span>
+                                <input
+                                  id={`price-${item.id}`}
+                                  type="number"
+                                  className="w-full pl-8 pr-3 py-2 rounded border border-border bg-background"
+                                  value={item.price}
+                                  onChange={(e) => {
+                                    const items = [...(brand.inventory?.items || [])];
+                                    items[index] = { ...item, price: parseFloat(e.target.value) || 0 };
+                                    setBrand({
+                                      ...brand,
+                                      inventory: { ...brand.inventory!, items }
+                                    });
+                                  }}
+                                  min="0"
+                                  step="0.01"
+                                  aria-label="Item price in Ghana cedis"
+                                  placeholder="0.00"
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label htmlFor={`quantity-${item.id}`} className="text-sm text-muted-foreground">
+                                Quantity
+                              </label>
+                              <input
+                                id={`quantity-${item.id}`}
+                                type="number"
+                                className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const items = [...(brand.inventory?.items || [])];
+                                  items[index] = { ...item, quantity: parseInt(e.target.value) || 0 };
+                                  setBrand({
+                                    ...brand,
+                                    inventory: { ...brand.inventory!, items }
+                                  });
+                                }}
+                                min="0"
+                                aria-label="Item quantity in stock"
+                                placeholder="0"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm text-muted-foreground">Image URL (Optional)</label>
+                              <input
+                                className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
+                                value={item.imageUrl || ''}
+                                onChange={(e) => {
+                                  const items = [...(brand.inventory?.items || [])];
+                                  items[index] = { ...item, imageUrl: e.target.value };
+                                  setBrand({
+                                    ...brand,
+                                    inventory: { ...brand.inventory!, items }
+                                  });
+                                }}
+                                placeholder="https://example.com/image.jpg"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                const items = (brand.inventory?.items || []).filter((_, i) => i !== index);
+                                setBrand({
+                                  ...brand,
+                                  inventory: { ...brand.inventory!, items }
+                                });
+                              }}
+                            >
+                              Remove Item
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="general" className="border border-border rounded-lg bg-card px-4">
+            <AccordionTrigger className="py-4 hover:no-underline">
+              <span className="text-lg font-semibold">General</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="brand-name" className="text-sm text-muted-foreground">Name</label>
@@ -291,14 +555,14 @@ export default function BrandEditorPage() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>WhatsApp</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          <AccordionItem value="whatsapp" className="border border-border rounded-lg bg-card px-4">
+            <AccordionTrigger className="py-4 hover:no-underline">
+              <span className="text-lg font-semibold">WhatsApp</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
               <label htmlFor="brand-whatsapp-enabled" className="text-sm text-muted-foreground">Enable WhatsApp Notifications</label>
               <input
@@ -364,14 +628,14 @@ export default function BrandEditorPage() {
                 placeholder="secret"
               />
             </div>
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Colors</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          <AccordionItem value="colors" className="border border-border rounded-lg bg-card px-4">
+            <AccordionTrigger className="py-4 hover:no-underline">
+              <span className="text-lg font-semibold">Colors</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-3">
             {[
               "primary","primaryForeground","secondary","secondaryForeground",
               "accent","accentForeground","foreground","background",
@@ -390,14 +654,14 @@ export default function BrandEditorPage() {
                 />
               </div>
             ))}
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Assets</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          <AccordionItem value="assets" className="border border-border rounded-lg bg-card px-4">
+            <AccordionTrigger className="py-4 hover:no-underline">
+              <span className="text-lg font-semibold">Assets</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
               <label className="text-sm text-muted-foreground">Logo (light)</label>
               <input
@@ -434,14 +698,14 @@ export default function BrandEditorPage() {
                 placeholder="/brands/fruity-gold/favicon.ico"
               />
             </div>
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Payments</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          <AccordionItem value="payments" className="border border-border rounded-lg bg-card px-4">
+            <AccordionTrigger className="py-4 hover:no-underline">
+              <span className="text-lg font-semibold">Payments</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
               <label htmlFor="brand-payment-receiver" className="text-sm text-muted-foreground">Crypto Receiver (wallet)</label>
               <input
@@ -468,14 +732,14 @@ export default function BrandEditorPage() {
                 placeholder="pk_live_xxx or pk_test_xxx"
               />
             </div>
-          </CardContent>
-        </Card>
+            </AccordionContent>
+          </AccordionItem>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Meta</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <AccordionItem value="meta" className="border border-border rounded-lg bg-card px-4">
+            <AccordionTrigger className="py-4 hover:no-underline">
+              <span className="text-lg font-semibold">Meta</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-4">
             <div>
               <label htmlFor="brand-meta-title" className="text-sm text-muted-foreground">Title</label>
               <input
@@ -503,256 +767,9 @@ export default function BrandEditorPage() {
                 placeholder="Invoices and instant payments powered by Zyra"
               />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Inventory Management</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
-              <label htmlFor="inventory-enabled" className="text-sm text-muted-foreground">
-                Enable Inventory Management
-              </label>
-              <input
-                id="inventory-enabled"
-                type="checkbox"
-                className="h-4 w-4"
-                checked={!!brand.inventory?.enabled}
-                onChange={(e) => setBrand({
-                  ...brand,
-                  inventory: { 
-                    ...(brand.inventory || {}), 
-                    enabled: e.target.checked,
-                    items: brand.inventory?.items || []
-                  }
-                })}
-              />
-            </div>
-
-            {brand.inventory?.enabled && (
-              <div className="mt-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium">Inventory Items</h3>
-                  <div className="flex gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".xlsx,.xls,.csv"
-                      onChange={handleExcelUpload}
-                      className="hidden"
-                      id="excel-upload"
-                      disabled={uploading}
-                    />
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                    >
-                      {uploading ? (
-                        <>
-                          <FileSpreadsheet className="h-4 w-4 mr-2 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload Excel
-                        </>
-                      )}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        const newItem: InventoryItem = {
-                          id: `item-${Date.now()}`,
-                          name: '',
-                          price: 0,
-                          quantity: 0
-                        };
-                        setBrand({
-                          ...brand,
-                          inventory: {
-                            ...brand.inventory!,
-                            items: [...(brand.inventory?.items || []), newItem]
-                          }
-                        });
-                      }}
-                    >
-                      + Add Item
-                    </Button>
-                  </div>
-                </div>
-
-                {uploadError && (
-                  <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{uploadError}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="ml-auto"
-                      onClick={() => setUploadError(null)}
-                    >
-                      ×
-                    </Button>
-                  </div>
-                )}
-
-                <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                  <p className="font-medium mb-1">Excel File Format:</p>
-                  <p>Your Excel file should have columns: <strong>Name</strong> (required), <strong>Price</strong> (required), <strong>Quantity</strong>, <strong>Description</strong>, <strong>SKU</strong>, <strong>Image URL</strong></p>
-                  <p className="mt-1 text-xs">Column names are case-insensitive and can include variations like &quot;Item Name&quot;, &quot;Product&quot;, &quot;Cost&quot;, &quot;Qty&quot;, etc.</p>
-                </div>
-
-                <div className="space-y-4">
-                  {brand.inventory?.items?.map((item, index) => (
-                    <div key={item.id} className="border rounded-lg p-4 space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm text-muted-foreground">Name</label>
-                          <input
-                            className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                            value={item.name}
-                            onChange={(e) => {
-                              const items = [...(brand.inventory?.items || [])];
-                              items[index] = { ...item, name: e.target.value };
-                              setBrand({
-                                ...brand,
-                                inventory: { ...brand.inventory!, items }
-                              });
-                            }}
-                            placeholder="Item name"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm text-muted-foreground">SKU (Optional)</label>
-                          <input
-                            className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                            value={item.sku || ''}
-                            onChange={(e) => {
-                              const items = [...(brand.inventory?.items || [])];
-                              items[index] = { ...item, sku: e.target.value };
-                              setBrand({
-                                ...brand,
-                                inventory: { ...brand.inventory!, items }
-                              });
-                            }}
-                            placeholder="SKU-123"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-sm text-muted-foreground">Description (Optional)</label>
-                        <textarea
-                          className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                          value={item.description || ''}
-                          onChange={(e) => {
-                            const items = [...(brand.inventory?.items || [])];
-                            items[index] = { ...item, description: e.target.value };
-                            setBrand({
-                              ...brand,
-                              inventory: { ...brand.inventory!, items }
-                            });
-                          }}
-                          placeholder="Item description"
-                          rows={2}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label htmlFor={`price-${item.id}`} className="text-sm text-muted-foreground">
-                            Price
-                          </label>
-                          <div className="relative mt-1">
-                            <span className="absolute left-3 top-2 text-muted-foreground">$</span>
-                            <input
-                              id={`price-${item.id}`}
-                              type="number"
-                              className="w-full pl-8 pr-3 py-2 rounded border border-border bg-background"
-                              value={item.price}
-                              onChange={(e) => {
-                                const items = [...(brand.inventory?.items || [])];
-                                items[index] = { ...item, price: parseFloat(e.target.value) || 0 };
-                                setBrand({
-                                  ...brand,
-                                  inventory: { ...brand.inventory!, items }
-                                });
-                              }}
-                              min="0"
-                              step="0.01"
-                              aria-label="Item price in dollars"
-                              placeholder="0.00"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label htmlFor={`quantity-${item.id}`} className="text-sm text-muted-foreground">
-                            Quantity
-                          </label>
-                          <input
-                            id={`quantity-${item.id}`}
-                            type="number"
-                            className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const items = [...(brand.inventory?.items || [])];
-                              items[index] = { ...item, quantity: parseInt(e.target.value) || 0 };
-                              setBrand({
-                                ...brand,
-                                inventory: { ...brand.inventory!, items }
-                              });
-                            }}
-                            min="0"
-                            aria-label="Item quantity in stock"
-                            placeholder="0"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm text-muted-foreground">Image URL (Optional)</label>
-                          <input
-                            className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                            value={item.imageUrl || ''}
-                            onChange={(e) => {
-                              const items = [...(brand.inventory?.items || [])];
-                              items[index] = { ...item, imageUrl: e.target.value };
-                              setBrand({
-                                ...brand,
-                                inventory: { ...brand.inventory!, items }
-                              });
-                            }}
-                            placeholder="https://example.com/image.jpg"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => {
-                            const items = (brand.inventory?.items || []).filter((_, i) => i !== index);
-                            setBrand({
-                              ...brand,
-                              inventory: { ...brand.inventory!, items }
-                            });
-                          }}
-                        >
-                          Remove Item
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
       </div>
     </div>
   );
