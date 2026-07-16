@@ -127,24 +127,30 @@ export default function Home() {
   const { theme } = useTheme();
 
   useEffect(() => {
+    setPaymentLinks([]);
+    setPayments([]);
+    setMobileMoneyInvoices([]);
+
     if (account?.address) {
       fetchData();
     }
-  }, [account?.address]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [account?.address, slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch mobile money invoices independently of wallet connection
   useEffect(() => {
     const fetchMobileMoneyInvoices = async () => {
       try {
+        setMobileMoneyInvoices([]);
         // Always use company-specific endpoint when slug is available for proper isolation
         const url = slug
           ? `/api/companies/${slug}/mobile-money-invoices`
           : '/api/mobile-money-invoices?companySlug=';
         const mobileMoneyResponse = await fetch(url);
         const mobileMoneyData = await mobileMoneyResponse.json();
-        setMobileMoneyInvoices(mobileMoneyData.invoices || []);
+        setMobileMoneyInvoices(Array.isArray(mobileMoneyData.invoices) ? mobileMoneyData.invoices : []);
       } catch (error) {
         console.error('Error fetching mobile money invoices:', error);
+        setMobileMoneyInvoices([]);
       }
     };
 
@@ -154,9 +160,15 @@ export default function Home() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setPaymentLinks([]);
+      setPayments([]);
+      setMobileMoneyInvoices([]);
 
-      // Fetch payment links for this address
-      const linksResponse = await fetch(`/api/payment-links?receiver=${account!.address}`);
+      // Fetch payment links for this address, scoped to company when on a company dashboard
+      const linksUrl = slug
+        ? `/api/payment-links?receiver=${account!.address}&companySlug=${encodeURIComponent(slug)}`
+        : `/api/payment-links?receiver=${account!.address}`;
+      const linksResponse = await fetch(linksUrl);
       const linksData = await linksResponse.json();
 
       // Fetch all payments
@@ -165,7 +177,7 @@ export default function Home() {
 
 
       // Get unique tokens to fetch prices for
-      const links = linksData.data || [];
+      const links = Array.isArray(linksData.data) ? linksData.data : [];
       const uniqueTokens = links.reduce((acc: Array<{chainId: number, address: string}>, link: PaymentLink) => {
         const token = link.destinationToken;
         const exists = acc.find(t => t.chainId === token.chainId && t.address === token.address);

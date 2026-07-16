@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPaymentLinkIdsForCompany } from '@/lib/payment-link-storage';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const receiver = searchParams.get('receiver');
+  const companySlug = searchParams.get('companySlug');
 
   if (!receiver) {
     return NextResponse.json({ error: 'Receiver address is required' }, { status: 400 });
@@ -27,12 +29,19 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log(data);
 
     // Filter links by receiver address
-    const filteredLinks = data.data?.filter((link: { receiver?: string }) =>
+    let filteredLinks = data.data?.filter((link: { receiver?: string }) =>
       link.receiver?.toLowerCase() === receiver.toLowerCase()
     ) || [];
+
+    // When viewing a company dashboard, only show invoices created for that company
+    if (companySlug) {
+      const companyLinkIds = new Set(await getPaymentLinkIdsForCompany(companySlug));
+      filteredLinks = filteredLinks.filter((link: { id?: string }) =>
+        link.id ? companyLinkIds.has(link.id) : false
+      );
+    }
 
     return NextResponse.json({ data: filteredLinks });
   } catch (error) {

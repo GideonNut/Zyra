@@ -223,6 +223,14 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
           body: JSON.stringify({
             title: values.customerName,
             description: values.description || undefined,
+            companySlug: slug,
+            destinationToken: {
+              chainId: selectedToken.chainId,
+              address: selectedToken.address,
+              decimals: selectedToken.decimals,
+              symbol: selectedToken.symbol,
+              name: selectedToken.name,
+            },
             intent: {
               destinationChainId: selectedChainId,
               destinationTokenAddress: selectedToken.address,

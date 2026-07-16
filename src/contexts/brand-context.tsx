@@ -95,14 +95,22 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           setBrand(undefined);
           return;
         }
-        // Load static brand json from public/brands/<slug>/brand.json
-        const res = await fetch(`/brands/${slug}/brand.json`, { cache: "no-store" });
-        if (!res.ok) {
-          setBrand(undefined);
+        // Load static brand json from public/brands/<slug>/brand.json, fall back to Firestore
+        const staticRes = await fetch(`/brands/${slug}/brand.json`, { cache: "no-store" });
+        if (staticRes.ok) {
+          const data: Brand = await staticRes.json();
+          if (!cancelled) setBrand(data);
           return;
         }
-        const data: Brand = await res.json();
-        if (!cancelled) setBrand(data);
+
+        const apiRes = await fetch(`/api/brands/${slug}`, { cache: "no-store" });
+        if (apiRes.ok) {
+          const data: Brand = await apiRes.json();
+          if (!cancelled) setBrand(data);
+          return;
+        }
+
+        if (!cancelled) setBrand(undefined);
       } catch {
         if (!cancelled) setBrand(undefined);
       }

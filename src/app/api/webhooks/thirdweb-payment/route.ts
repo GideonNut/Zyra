@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveInvoice } from '@/lib/invoice-storage';
 import { saveCompanyInvoice } from '@/lib/company-invoice-storage';
+import { updateCryptoInvoiceStatus } from '@/lib/crypto-invoice-storage';
+import { getCompanySlugForPaymentLink } from '@/lib/payment-link-storage';
 import { generateCryptoReferenceHash, recordTransactionToRegistry } from '@/lib/transaction-recorder';
 import { whatsappService } from '@/lib/whatsapp-service';
 import { getWhatsAppConfig } from '@/lib/whatsapp-config';
@@ -10,6 +12,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, status, transactionHash, payer, receiver, amount, token, metadata } = body;
+    const paymentLinkId: string | undefined =
+      metadata?.paymentLinkId || metadata?.payment_link_id || id;
 
     if (!id) {
       return NextResponse.json(
@@ -77,13 +81,21 @@ export async function POST(request: NextRequest) {
           }
         };
 
-        const companySlug = metadata?.companySlug;
+        const companySlug =
+          metadata?.companySlug ||
+          metadata?.company_slug ||
+          (paymentLinkId ? await getCompanySlugForPaymentLink(paymentLinkId) : undefined);
+
         if (companySlug) {
           const savedInvoice = await saveCompanyInvoice(companySlug, invoiceData as Parameters<typeof saveCompanyInvoice>[1]);
           console.log('Crypto Payment Invoice Created and Saved (Company):', companySlug, savedInvoice.id);
         } else {
           const savedInvoice = await saveInvoice(invoiceData as Parameters<typeof saveInvoice>[0]);
           console.log('Crypto Payment Invoice Created and Saved (Global):', savedInvoice.id);
+        }
+
+        if (paymentLinkId) {
+          await updateCryptoInvoiceStatus(paymentLinkId, 'paid', new Date().toISOString());
         }
 
         // Send WhatsApp notification if phone number available
