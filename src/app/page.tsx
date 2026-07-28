@@ -139,20 +139,8 @@ export default function Home() {
   }, [account?.address, slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    async function loadSettings() {
-      try {
-        const res = await fetch('/api/admin/settings');
-        if (res.ok) {
-          const data = await res.json();
-          setSalesDashboardMode(Boolean(data.salesDashboardMode));
-        }
-      } catch (error) {
-        console.error('Failed to load dashboard settings:', error);
-      }
-    }
-
-    loadSettings();
-  }, []);
+    setSalesDashboardMode(Boolean(brand?.salesDashboardMode));
+  }, [brand?.salesDashboardMode]);
 
   // Fetch mobile money invoices independently of wallet connection
   useEffect(() => {

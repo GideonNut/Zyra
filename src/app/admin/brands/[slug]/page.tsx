@@ -105,6 +105,7 @@ type Brand = {
     mobileMoneyEnabled?: boolean;
     cryptoEnabled?: boolean;
   };
+  salesDashboardMode?: boolean;
   whatsapp?: {
     enabled?: boolean;
     accessToken?: string;
@@ -575,6 +576,21 @@ export default function BrandEditorPage() {
             </AccordionTrigger>
             <AccordionContent className="pb-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 flex items-center justify-between rounded-lg border border-border/50 p-3">
+                <div>
+                  <label htmlFor="sales-dashboard-mode" className="text-sm font-medium">Sales dashboard focus</label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enable a sales-focused dashboard layout for this brand/company.
+                  </p>
+                </div>
+                <input
+                  id="sales-dashboard-mode"
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!brand.salesDashboardMode}
+                  onChange={(e) => setBrand({ ...brand, salesDashboardMode: e.target.checked })}
+                />
+              </div>
               <div>
                 <label htmlFor="brand-name" className="text-sm text-muted-foreground">Name</label>
                 <input

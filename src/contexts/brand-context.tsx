@@ -43,6 +43,7 @@ export type Brand = {
     mobileMoneyEnabled?: boolean;
     cryptoEnabled?: boolean;
   };
+  salesDashboardMode?: boolean;
   whatsapp?: {
     enabled?: boolean;
     accessToken?: string;

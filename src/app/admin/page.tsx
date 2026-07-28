@@ -40,7 +40,6 @@ import {
   Mail
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
 import { WalletManagement } from "@/components/wallet-management";
 import { EmailManager } from "@/components/email-manager";
 
@@ -85,7 +84,6 @@ interface ContactInterest {
 
 interface GlobalSettings {
   feeRecipient?: string;
-  salesDashboardMode?: boolean;
 }
 
 export default function MasterAdminPage() {
@@ -463,21 +461,6 @@ export default function MasterAdminPage() {
                     <p className="text-xs text-muted-foreground mt-2">
                       When this field is set, crypto invoice totals include a 3% processing fee. The customer pays once to the merchant wallet; the invoice shows the fee as a separate line. This address is not auto-paid on-chain — use it for your Zyra settlement process.
                     </p>
-                  </div>
-                  <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
-                    <div>
-                      <Label htmlFor="sales-dashboard-mode">Sales dashboard focus</Label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Turn on a sales-focused dashboard layout with sales-centric headings and actions.
-                      </p>
-                    </div>
-                    <Switch
-                      id="sales-dashboard-mode"
-                      checked={Boolean(globalSettings.salesDashboardMode)}
-                      onCheckedChange={(checked) =>
-                        setGlobalSettings({ ...globalSettings, salesDashboardMode: checked })
-                      }
-                    />
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
