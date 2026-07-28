@@ -20,7 +20,7 @@ import { toUnits } from "thirdweb";
 import { TokenSelector } from "@/components/ui/token-selector";
 import { SingleNetworkSelector } from "@/components/ui/network-selector";
 import { client } from "@/lib/constants";
-import { useBrand, InventoryItem } from "@/contexts/brand-context";
+import { useBrand, InventoryItem, Brand } from "@/contexts/brand-context";
 
 // Extend Window interface for Paystack
 declare global {
@@ -48,7 +48,8 @@ const formSchema = z.object({
     message: "Amount must be a valid number",
   }),
   currency: z.enum(["GHS", "USD", "CRYPTO"]).default("GHS"),
-  paymentMethod: z.enum(["mobile_money", "crypto"]).default("mobile_money"),
+  paymentMethod: z.enum(["mobile_money", "crypto", "cash"]).default("mobile_money"),
+  skipPayment: z.boolean().optional().default(false),
   description: z.string().optional(),
   selectedItems: z.array(z.object({
     id: z.string(),
@@ -57,6 +58,15 @@ const formSchema = z.object({
     quantity: z.number().min(0),
   })).default([]),
 });
+
+function paymentMethodsForBrand(brand: Brand | undefined) {
+  const mobileMoney =
+    !!brand?.payment?.mobileMoneyEnabled && !!brand?.payment?.paystackPublicKey;
+  const crypto =
+    !!brand?.payment?.cryptoEnabled && !!brand?.payment?.receiver;
+  const cash = !!brand?.payment?.cashEnabled;
+  return { mobileMoney, crypto, cash };
+}
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -85,7 +95,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
   const [paymentLink, setPaymentLink] = useState<string | null>(null);
   const [selectedToken, setSelectedToken] = useState<TokenMetadata | null>(null);
   const [selectedChainId, setSelectedChainId] = useState<number | undefined>(undefined);
-  const [paymentMethod, setPaymentMethod] = useState<"mobile_money" | "crypto">("mobile_money");
+  const [paymentMethod, setPaymentMethod] = useState<"mobile_money" | "crypto" | "cash">("mobile_money");
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings>({});
   
   const form = useForm<FormValues>({
@@ -97,6 +107,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
       amount: "",
       currency: "GHS",
       paymentMethod: "mobile_money",
+      skipPayment: false,
       description: "",
       selectedItems: [],
     },
@@ -118,6 +129,23 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
     loadSettings();
   }, []);
 
+  const { mobileMoney: mobileMoneyAvailable, crypto: cryptoAvailable, cash: cashAvailable } =
+    paymentMethodsForBrand(brand);
+
+  useEffect(() => {
+    const current = form.getValues("paymentMethod");
+    const available: Array<"mobile_money" | "crypto" | "cash"> = [];
+    if (mobileMoneyAvailable) available.push("mobile_money");
+    if (cryptoAvailable) available.push("crypto");
+    if (cashAvailable) available.push("cash");
+    if (available.length === 0) return;
+    if (!available.includes(current)) {
+      const next = available[0];
+      form.setValue("paymentMethod", next);
+      setPaymentMethod(next);
+    }
+  }, [mobileMoneyAvailable, cryptoAvailable, cashAvailable, form]);
+
   // Calculate total from selected items when inventory is enabled
   const watchSelectedItems = form.watch("selectedItems");
   
@@ -133,6 +161,12 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
 
   // Handle inventory item quantity change
   const handleQuantityChange = (itemId: string, quantity: number) => {
+    const inventoryItem = brand?.inventory?.items?.find((i) => i.id === itemId);
+    const minQty = inventoryItem?.allowHalfQuarter ? 0.25 : 1;
+    const normalized = inventoryItem?.allowHalfQuarter
+      ? Math.round(Math.max(0, quantity) * 4) / 4
+      : Math.max(0, Math.floor(quantity));
+
     const currentItems = form.getValues("selectedItems") || [];
     const itemIndex = currentItems.findIndex(item => item.id === itemId);
     
@@ -140,10 +174,14 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
       const updatedItems = [...currentItems];
       updatedItems[itemIndex] = {
         ...updatedItems[itemIndex],
-        quantity: Math.max(0, quantity)
+        quantity: normalized >= minQty || normalized === 0 ? normalized : minQty
       };
       form.setValue("selectedItems", updatedItems);
     }
+  };
+
+  const setPortionQuantity = (itemId: string, portion: number) => {
+    handleQuantityChange(itemId, portion);
   };
 
   // Toggle item selection
@@ -266,7 +304,8 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
           window.open(qrUrl, '_blank');
         }
       } else {
-        // Handle mobile money payments
+        const shouldSkipPayment = Boolean(brand?.payment?.skipPayments) && values.paymentMethod === "mobile_money";
+        const isCash = values.paymentMethod === "cash";
         const response = await fetch('/api/paystack/initialize', {
           method: 'POST',
           headers: {
@@ -278,8 +317,12 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
             amount: values.amount,
             currency: values.currency,
             description: values.description,
-            email: `${values.phoneNumber}@mobilemoney.gh`, // Use phone as email for mobile money
+            email: isCash
+              ? `${values.customerName.replace(/\s+/g, '.').toLowerCase()}@cash.local`
+              : `${values.phoneNumber}@mobilemoney.gh`,
             companySlug: slug,
+            skipPayment: shouldSkipPayment,
+            paymentMethod: isCash ? 'cash' : 'mobile_money',
           }),
         });
 
@@ -288,28 +331,29 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
         }
 
         const data = await response.json();
-        
-        // Initialize Paystack payment
-        if (typeof window !== 'undefined' && window.PaystackPop) {
-          const paystack = window.PaystackPop.setup({
-            key: (brand?.payment?.paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || ''),
-            email: data.email,
-            amount: data.amount,
-            currency: data.currency,
-            ref: data.reference,
-            callback: function() {
-              // Verify payment
-              verifyPayment(data.reference);
-            },
-            onClose: function() {
-              alert('Payment cancelled');
-            }
-          });
-          paystack.openIframe();
+
+        if (data.manual) {
+          alert(isCash ? 'Cash sale recorded successfully' : 'Sale recorded successfully without payment');
+        } else if (!isCash) {
+          if (typeof window !== 'undefined' && window.PaystackPop) {
+            const paystack = window.PaystackPop.setup({
+              key: (brand?.payment?.paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || ''),
+              email: data.email,
+              amount: data.amount,
+              currency: data.currency,
+              ref: data.reference,
+              callback: function() {
+                // Verify payment
+                verifyPayment(data.reference);
+              },
+              onClose: function() {
+                alert('Payment cancelled');
+              }
+            });
+            paystack.openIframe();
+          }
         }
       }
-
-      // Reset form
       form.reset();
       setSelectedToken(null);
       setSelectedChainId(undefined);
@@ -369,6 +413,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
               )}
             />
 
+            {(mobileMoneyAvailable || cryptoAvailable || cashAvailable) ? (
             <FormField
               control={form.control}
               name="paymentMethod"
@@ -376,7 +421,8 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                 <FormItem>
                   <FormLabel>Payment Method</FormLabel>
                   <FormControl>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      {mobileMoneyAvailable && (
                       <Button
                         type="button"
                         variant={field.value === "mobile_money" ? "default" : "outline"}
@@ -384,10 +430,12 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                           field.onChange("mobile_money");
                           setPaymentMethod("mobile_money");
                         }}
-                        className="flex-1"
+                        className="flex-1 min-w-[7rem]"
                       >
                         Mobile Money
                       </Button>
+                      )}
+                      {cryptoAvailable && (
                       <Button
                         type="button"
                         variant={field.value === "crypto" ? "default" : "outline"}
@@ -395,18 +443,37 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                           field.onChange("crypto");
                           setPaymentMethod("crypto");
                         }}
-                        className="flex-1"
+                        className="flex-1 min-w-[7rem]"
                       >
                         Crypto
                       </Button>
+                      )}
+                      {cashAvailable && (
+                      <Button
+                        type="button"
+                        variant={field.value === "cash" ? "default" : "outline"}
+                        onClick={() => {
+                          field.onChange("cash");
+                          setPaymentMethod("cash");
+                        }}
+                        className="flex-1 min-w-[7rem]"
+                      >
+                        Cash
+                      </Button>
+                      )}
                     </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            ) : (
+              <p className="text-sm text-muted-foreground rounded-md border border-dashed border-border p-3">
+                No payment methods are enabled for this company. Turn them on in company settings.
+              </p>
+            )}
 
-            {paymentMethod === "mobile_money" && (
+            {paymentMethod === "mobile_money" && mobileMoneyAvailable && (
               <FormField
                 control={form.control}
                 name="phoneNumber"
@@ -555,12 +622,20 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                                 <div className="flex items-center justify-between mt-3">
                                   {isSelected ? (
                                     <>
-                                      <div className="flex items-center gap-2">
+                                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+                                        {item.allowHalfQuarter && (
+                                          <div className="flex gap-1">
+                                            <Button type="button" variant="secondary" size="sm" className="h-8 px-2 text-xs" onClick={() => setPortionQuantity(item.id, 1)}>Full</Button>
+                                            <Button type="button" variant="secondary" size="sm" className="h-8 px-2 text-xs" onClick={() => setPortionQuantity(item.id, 0.5)}>½</Button>
+                                            <Button type="button" variant="secondary" size="sm" className="h-8 px-2 text-xs" onClick={() => setPortionQuantity(item.id, 0.25)}>¼</Button>
+                                          </div>
+                                        )}
+                                        <div className="flex items-center gap-2">
                                         <Button
                                           type="button"
                                           variant="outline"
                                           size="sm"
-                                          onClick={() => handleQuantityChange(item.id, (selectedItem?.quantity || 1) - 1)}
+                                          onClick={() => handleQuantityChange(item.id, (selectedItem?.quantity || 1) - (item.allowHalfQuarter ? 0.25 : 1))}
                                           disabled={!selectedItem?.quantity || selectedItem.quantity <= 0}
                                           className="h-8 w-8 p-0"
                                         >
@@ -569,10 +644,11 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                                         <Input
                                           type="number"
                                           min="0"
+                                          step={item.allowHalfQuarter ? "0.25" : "1"}
                                           max={availableStock > 0 ? availableStock : undefined}
-                                          value={selectedItem?.quantity || 0}
+                                          value={selectedItem?.quantity ?? 0}
                                           onChange={(e) => {
-                                            const qty = parseInt(e.target.value) || 0;
+                                            const qty = parseFloat(e.target.value) || 0;
                                             const maxQty = availableStock > 0 ? availableStock : undefined;
                                             handleQuantityChange(item.id, maxQty ? Math.min(qty, maxQty) : qty);
                                           }}
@@ -584,8 +660,9 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                                           size="sm"
                                           onClick={() => {
                                             const currentQty = selectedItem?.quantity || 0;
+                                            const step = item.allowHalfQuarter ? 0.25 : 1;
                                             const maxQty = availableStock > 0 ? availableStock : undefined;
-                                            handleQuantityChange(item.id, maxQty ? Math.min(currentQty + 1, maxQty) : currentQty + 1);
+                                            handleQuantityChange(item.id, maxQty ? Math.min(currentQty + step, maxQty) : currentQty + step);
                                           }}
                                           disabled={availableStock > 0 && (selectedItem?.quantity || 0) >= availableStock}
                                           className="h-8 w-8 p-0"
@@ -597,6 +674,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                                             Max stock reached
                                           </span>
                                         )}
+                                        </div>
                                       </div>
                                       <div className="text-right">
                                         <p className="text-xs text-muted-foreground">Subtotal</p>
@@ -684,6 +762,22 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
               />
             )}
 
+            {paymentMethod === "cash" && cashAvailable && (
+              <div className="rounded-lg border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+                <p className="font-medium">Cash payment</p>
+                <p className="mt-2">
+                  Submitting records this sale as paid in cash. No online payment will be initiated.
+                </p>
+              </div>
+            )}
+            {brand?.payment?.skipPayments && paymentMethod === "mobile_money" && mobileMoneyAvailable && (
+              <div className="rounded-lg border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+                <p className="font-medium">Manual sales recording enabled</p>
+                <p className="mt-2">
+                  This company records mobile money sales manually. Submitting this form will create an invoice record without initiating a payment transaction.
+                </p>
+              </div>
+            )}
             {paymentMethod === "crypto" && form.watch("amount") && globalSettings.feeRecipient && (
               <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
@@ -709,14 +803,28 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
               </p>
             )}
 
-            <Button type="submit" className="w-full" disabled={isCreating}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isCreating || (!mobileMoneyAvailable && !cryptoAvailable && !cashAvailable)}
+            >
               {isCreating ? (
                 <>
                   <Spinner size="sm" className="mr-2" />
-                  {paymentMethod === "mobile_money" ? "Processing..." : "Creating..."}
+                  {paymentMethod === "cash"
+                    ? "Recording..."
+                    : paymentMethod === "mobile_money" && brand?.payment?.skipPayments
+                      ? "Recording..."
+                      : paymentMethod === "mobile_money"
+                        ? "Processing..."
+                        : "Creating..."}
                 </>
+              ) : paymentMethod === "cash" ? (
+                "Record Cash Sale"
+              ) : paymentMethod === "mobile_money" ? (
+                brand?.payment?.skipPayments ? "Record Sale" : "Process Payment"
               ) : (
-                paymentMethod === "mobile_money" ? "Process Payment" : "Create Invoice"
+                "Create Invoice"
               )}
             </Button>
 

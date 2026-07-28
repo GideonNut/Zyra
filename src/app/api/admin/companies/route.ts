@@ -23,8 +23,9 @@ export async function GET() {
           totalInvoices: stats.totalInvoices,
           totalRevenue: stats.totalRevenue,
           paymentMethods: {
-            crypto: true, // Assume crypto is always available
-            mobileMoney: !!brand.payment?.paystackPublicKey
+            crypto: !!brand.payment?.cryptoEnabled && !!brand.payment?.receiver,
+            mobileMoney: !!brand.payment?.mobileMoneyEnabled && !!brand.payment?.paystackPublicKey,
+            cash: !!brand.payment?.cashEnabled,
           },
           whatsapp: {
             enabled: !!brand.whatsapp?.enabled
@@ -94,7 +95,11 @@ export async function POST(request: NextRequest) {
       },
       payment: {
         receiver: "",
-        paystackPublicKey: ""
+        paystackPublicKey: "",
+        skipPayments: false,
+        cashEnabled: false,
+        mobileMoneyEnabled: false,
+        cryptoEnabled: false,
       },
       whatsapp: {
         enabled: false,

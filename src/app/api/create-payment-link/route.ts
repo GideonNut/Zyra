@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveCompanyCryptoInvoice } from '@/lib/crypto-invoice-storage';
 import { savePaymentLinkMeta } from '@/lib/payment-link-storage';
+import { getBrandBySlug } from '@/lib/brand-storage';
 
 type FeeBreakdownBody = {
   baseAmountWei: string;
@@ -32,6 +33,18 @@ export async function POST(request: NextRequest) {
       companySlug?: string;
       destinationToken?: DestinationTokenBody;
     };
+
+    if (companySlug) {
+      const brand = await getBrandBySlug(companySlug);
+      const cryptoEnabled =
+        !!brand?.payment?.cryptoEnabled && !!brand?.payment?.receiver;
+      if (!cryptoEnabled) {
+        return NextResponse.json(
+          { error: 'Crypto payments are not enabled for this company' },
+          { status: 403 }
+        );
+      }
+    }
 
     const response = await fetch('https://payments.thirdweb.com/v1/developer/links', {
       method: 'POST',

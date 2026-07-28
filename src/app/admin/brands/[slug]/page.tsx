@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -21,6 +20,75 @@ interface InventoryItem {
   quantity: number;
   sku?: string;
   imageUrl?: string;
+  allowHalfQuarter?: boolean;
+}
+
+function EmptyZeroNumberInput({
+  value,
+  onChange,
+  id,
+  className,
+  step,
+  min,
+  prefix,
+  "aria-label": ariaLabel,
+  integer,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  id?: string;
+  className?: string;
+  step?: string;
+  min?: string;
+  prefix?: string;
+  "aria-label"?: string;
+  integer?: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  const [editText, setEditText] = useState<string | null>(null);
+
+  const displayValue = focused
+    ? (editText ?? (value === 0 ? "" : String(value)))
+    : value === 0
+      ? ""
+      : String(value);
+
+  return (
+    <div className="relative">
+      {prefix && (
+        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
+          {prefix}
+        </span>
+      )}
+      <input
+        id={id}
+        type="number"
+        className={className}
+        value={displayValue}
+        step={step}
+        min={min}
+        aria-label={ariaLabel}
+        onFocus={() => {
+          setFocused(true);
+          setEditText(value === 0 ? "" : String(value));
+        }}
+        onBlur={() => {
+          setFocused(false);
+          setEditText(null);
+        }}
+        onChange={(e) => {
+          const raw = e.target.value;
+          setEditText(raw);
+          if (raw === "" || raw === "-") {
+            onChange(0);
+            return;
+          }
+          const parsed = integer ? parseInt(raw, 10) : parseFloat(raw);
+          onChange(Number.isFinite(parsed) ? parsed : 0);
+        }}
+      />
+    </div>
+  );
 }
 
 type Brand = {
@@ -29,7 +97,14 @@ type Brand = {
   colors?: Record<string, string>;
   assets?: { logo?: { light?: string; dark?: string }; favicon?: string };
   meta?: { title?: string; description?: string };
-  payment?: { receiver?: string; paystackPublicKey?: string };
+  payment?: {
+    receiver?: string;
+    paystackPublicKey?: string;
+    skipPayments?: boolean;
+    cashEnabled?: boolean;
+    mobileMoneyEnabled?: boolean;
+    cryptoEnabled?: boolean;
+  };
   whatsapp?: {
     enabled?: boolean;
     accessToken?: string;
@@ -148,6 +223,9 @@ export default function BrandEditorPage() {
         const imageIndex = headers.findIndex(h => 
           h.includes("image") || h.includes("photo") || h.includes("url")
         );
+        const halfQuarterIndex = headers.findIndex(h =>
+          h.includes("half") || h.includes("quarter") || h.includes("portion") || h === "½/¼" || h === "1/2"
+        );
 
         if (nameIndex === -1 || priceIndex === -1) {
           throw new Error("Excel file must have 'Name' and 'Price' columns");
@@ -176,6 +254,9 @@ export default function BrandEditorPage() {
           const imageUrl = imageIndex !== -1 
             ? String(row[imageIndex] || "").trim() 
             : undefined;
+          const allowHalfQuarter = halfQuarterIndex !== -1
+            ? ["yes", "true", "1", "y", "x", "✓"].includes(String(row[halfQuarterIndex] || "").trim().toLowerCase())
+            : undefined;
 
           newItems.push({
             id: `item-${Date.now()}-${i}`,
@@ -185,6 +266,7 @@ export default function BrandEditorPage() {
             description: description || undefined,
             sku: sku || undefined,
             imageUrl: imageUrl || undefined,
+            ...(allowHalfQuarter ? { allowHalfQuarter: true } : {}),
           });
         }
 
@@ -296,12 +378,12 @@ export default function BrandEditorPage() {
                 </div>
 
                 {brand.inventory?.enabled && (
-                  <div className="mt-4 space-y-4">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                      <h3 className="font-medium">Inventory Items</h3>
+                  <div className="mt-4 space-y-3">
+                    <div className="sticky top-0 z-10 -mx-1 px-1 py-2 bg-card/95 backdrop-blur border-b border-border flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="font-medium text-sm">Items ({brand.inventory?.items?.length ?? 0})</h3>
                       <div className="flex flex-wrap gap-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploading}
@@ -314,37 +396,33 @@ export default function BrandEditorPage() {
                           ) : (
                             <>
                               <Upload className="h-4 w-4 mr-2" />
-                              Upload Excel
+                              Excel
                             </>
                           )}
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => {
                             const newItem: InventoryItem = {
                               id: `item-${Date.now()}`,
-                              name: '',
+                              name: "",
                               price: 0,
-                              quantity: 0
+                              quantity: 0,
                             };
                             setBrand({
                               ...brand,
                               inventory: {
                                 ...brand.inventory!,
-                                items: [...(brand.inventory?.items || []), newItem]
-                              }
+                                items: [...(brand.inventory?.items || []), newItem],
+                              },
                             });
                           }}
                         >
-                          + Add Item
+                          + Add row
                         </Button>
-                        <Button
-                          size="sm"
-                          onClick={onSave}
-                          disabled={saving}
-                        >
-                          {saving ? "Saving..." : "Save inventory"}
+                        <Button size="sm" onClick={onSave} disabled={saving}>
+                          {saving ? "Saving..." : "Save"}
                         </Button>
                       </div>
                       <input
@@ -362,166 +440,129 @@ export default function BrandEditorPage() {
 
                     {uploadError && (
                       <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <span>{uploadError}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="ml-auto"
-                          onClick={() => setUploadError(null)}
-                        >
-                          ×
-                        </Button>
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span className="flex-1">{uploadError}</span>
+                        <Button variant="ghost" size="sm" onClick={() => setUploadError(null)}>×</Button>
                       </div>
                     )}
 
-                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                      <p className="font-medium mb-1">Excel File Format:</p>
-                      <p>Your Excel file should have columns: <strong>Name</strong> (required), <strong>Price</strong> (required), <strong>Quantity</strong>, <strong>Description</strong>, <strong>SKU</strong>, <strong>Image URL</strong></p>
-                      <p className="mt-1 text-xs">Column names are case-insensitive and can include variations like &quot;Item Name&quot;, &quot;Product&quot;, &quot;Cost&quot;, &quot;Qty&quot;, etc.</p>
-                    </div>
+                    <details className="text-sm text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+                      <summary className="cursor-pointer font-medium text-foreground">Excel column format</summary>
+                      <p className="mt-2 pb-1">
+                        Columns: <strong>Name</strong>, <strong>Price</strong>, optional Quantity, Description, SKU, Image URL, Half/Quarter (yes/no).
+                      </p>
+                    </details>
 
-                    <div className="space-y-4">
-                      {brand.inventory?.items?.map((item, index) => (
-                        <div key={item.id} className="border rounded-lg p-4 space-y-3">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-sm text-muted-foreground">Name</label>
-                              <input
-                                className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                                value={item.name}
-                                onChange={(e) => {
-                                  const items = [...(brand.inventory?.items || [])];
-                                  items[index] = { ...item, name: e.target.value };
-                                  setBrand({
-                                    ...brand,
-                                    inventory: { ...brand.inventory!, items }
-                                  });
-                                }}
-                                placeholder="Item name"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-sm text-muted-foreground">SKU (Optional)</label>
-                              <input
-                                className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                                value={item.sku || ''}
-                                onChange={(e) => {
-                                  const items = [...(brand.inventory?.items || [])];
-                                  items[index] = { ...item, sku: e.target.value };
-                                  setBrand({
-                                    ...brand,
-                                    inventory: { ...brand.inventory!, items }
-                                  });
-                                }}
-                                placeholder="SKU-123"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="text-sm text-muted-foreground">Description (Optional)</label>
-                            <textarea
-                              className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                              value={item.description || ''}
-                              onChange={(e) => {
-                                const items = [...(brand.inventory?.items || [])];
-                                items[index] = { ...item, description: e.target.value };
-                                setBrand({
-                                  ...brand,
-                                  inventory: { ...brand.inventory!, items }
-                                });
-                              }}
-                              placeholder="Item description"
-                              rows={2}
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                              <label htmlFor={`price-${item.id}`} className="text-sm text-muted-foreground">
-                                Price (GHS)
-                              </label>
-                              <div className="relative mt-1">
-                                <span className="absolute left-3 top-2 text-muted-foreground">₵</span>
+                    <div className="overflow-auto max-h-[min(70vh,560px)] rounded-lg border border-border">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/60 sticky top-0">
+                          <tr className="text-left text-muted-foreground">
+                            <th className="p-2 font-medium min-w-[140px]">Name</th>
+                            <th className="p-2 font-medium w-24">Price ₵</th>
+                            <th className="p-2 font-medium w-20">Stock</th>
+                            <th className="p-2 font-medium w-16 text-center" title="Sell by half and quarter">½/¼</th>
+                            <th className="p-2 font-medium min-w-[88px]">SKU</th>
+                            <th className="p-2 font-medium w-10" />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(brand.inventory?.items?.length ?? 0) === 0 && (
+                            <tr>
+                              <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                                No items yet. Click &quot;+ Add row&quot; or upload Excel.
+                              </td>
+                            </tr>
+                          )}
+                          {brand.inventory?.items?.map((item, index) => (
+                            <tr key={item.id} className="border-t border-border align-top hover:bg-muted/20">
+                              <td className="p-2">
                                 <input
-                                  id={`price-${item.id}`}
-                                  type="number"
-                                  className="w-full pl-8 pr-3 py-2 rounded border border-border bg-background"
-                                  value={item.price}
+                                  className="w-full px-2 py-1.5 rounded border border-border bg-background"
+                                  value={item.name}
                                   onChange={(e) => {
                                     const items = [...(brand.inventory?.items || [])];
-                                    items[index] = { ...item, price: parseFloat(e.target.value) || 0 };
-                                    setBrand({
-                                      ...brand,
-                                      inventory: { ...brand.inventory!, items }
-                                    });
+                                    items[index] = { ...item, name: e.target.value };
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
                                   }}
-                                  min="0"
-                                  step="0.01"
-                                  aria-label="Item price in Ghana cedis"
-                                  placeholder="0.00"
+                                  placeholder="Item name"
                                 />
-                              </div>
-                            </div>
-                            <div>
-                              <label htmlFor={`quantity-${item.id}`} className="text-sm text-muted-foreground">
-                                Quantity
-                              </label>
-                              <input
-                                id={`quantity-${item.id}`}
-                                type="number"
-                                className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                                value={item.quantity}
-                                onChange={(e) => {
-                                  const items = [...(brand.inventory?.items || [])];
-                                  items[index] = { ...item, quantity: parseInt(e.target.value) || 0 };
-                                  setBrand({
-                                    ...brand,
-                                    inventory: { ...brand.inventory!, items }
-                                  });
-                                }}
-                                min="0"
-                                aria-label="Item quantity in stock"
-                                placeholder="0"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-sm text-muted-foreground">Image URL (Optional)</label>
-                              <input
-                                className="w-full mt-1 px-3 py-2 rounded border border-border bg-background"
-                                value={item.imageUrl || ''}
-                                onChange={(e) => {
-                                  const items = [...(brand.inventory?.items || [])];
-                                  items[index] = { ...item, imageUrl: e.target.value };
-                                  setBrand({
-                                    ...brand,
-                                    inventory: { ...brand.inventory!, items }
-                                  });
-                                }}
-                                placeholder="https://example.com/image.jpg"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => {
-                                const items = (brand.inventory?.items || []).filter((_, i) => i !== index);
-                                setBrand({
-                                  ...brand,
-                                  inventory: { ...brand.inventory!, items }
-                                });
-                              }}
-                            >
-                              Remove Item
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                              </td>
+                              <td className="p-2">
+                                <EmptyZeroNumberInput
+                                  id={`price-${item.id}`}
+                                  value={item.price}
+                                  step="0.01"
+                                  min="0"
+                                  className="w-full px-2 py-1.5 rounded border border-border bg-background"
+                                  aria-label="Item price in Ghana cedis"
+                                  onChange={(price) => {
+                                    const items = [...(brand.inventory?.items || [])];
+                                    items[index] = { ...item, price };
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
+                                  }}
+                                />
+                              </td>
+                              <td className="p-2">
+                                <EmptyZeroNumberInput
+                                  id={`quantity-${item.id}`}
+                                  value={item.quantity}
+                                  min="0"
+                                  integer
+                                  className="w-full px-2 py-1.5 rounded border border-border bg-background"
+                                  aria-label="Item quantity in stock"
+                                  onChange={(quantity) => {
+                                    const items = [...(brand.inventory?.items || [])];
+                                    items[index] = { ...item, quantity };
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
+                                  }}
+                                />
+                              </td>
+                              <td className="p-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4"
+                                  checked={!!item.allowHalfQuarter}
+                                  aria-label={`Allow half and quarter sales for ${item.name || "item"}`}
+                                  onChange={(e) => {
+                                    const items = [...(brand.inventory?.items || [])];
+                                    items[index] = { ...item, allowHalfQuarter: e.target.checked };
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
+                                  }}
+                                />
+                              </td>
+                              <td className="p-2">
+                                <input
+                                  className="w-full px-2 py-1.5 rounded border border-border bg-background"
+                                  value={item.sku || ""}
+                                  onChange={(e) => {
+                                    const items = [...(brand.inventory?.items || [])];
+                                    items[index] = { ...item, sku: e.target.value };
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
+                                  }}
+                                  placeholder="SKU"
+                                />
+                              </td>
+                              <td className="p-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive h-8 px-2"
+                                  onClick={() => {
+                                    const items = (brand.inventory?.items || []).filter((_, i) => i !== index);
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
+                                  }}
+                                >
+                                  Remove
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Check ½/¼ for items you sell by portion (half or quarter). Optional description and image URL can be added via Excel import.
+                    </p>
                   </div>
                 )}
               </div>
@@ -705,7 +746,81 @@ export default function BrandEditorPage() {
             <AccordionTrigger className="py-4 hover:no-underline">
               <span className="text-lg font-semibold">Payments</span>
             </AccordionTrigger>
-            <AccordionContent className="pb-4 space-y-3">
+            <AccordionContent className="pb-4 space-y-4">
+            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-3">
+              <p className="text-sm font-medium">Payment methods</p>
+              <p className="text-xs text-muted-foreground">
+                Only enabled methods appear at checkout. Configure keys/wallets below before turning each on.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                <label htmlFor="brand-payment-mobile-enabled" className="text-sm text-muted-foreground">
+                  Enable Mobile Money
+                  {!brand.payment?.paystackPublicKey && (
+                    <span className="block text-xs text-amber-600 dark:text-amber-500">Add Paystack key first</span>
+                  )}
+                </label>
+                <input
+                  id="brand-payment-mobile-enabled"
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!brand.payment?.mobileMoneyEnabled}
+                  disabled={!brand.payment?.paystackPublicKey}
+                  onChange={(e) => setBrand({
+                    ...brand,
+                    payment: { ...(brand.payment || {}), mobileMoneyEnabled: e.target.checked }
+                  })}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                <label htmlFor="brand-payment-crypto-enabled" className="text-sm text-muted-foreground">
+                  Enable Crypto
+                  {!brand.payment?.receiver && (
+                    <span className="block text-xs text-amber-600 dark:text-amber-500">Add wallet address first</span>
+                  )}
+                </label>
+                <input
+                  id="brand-payment-crypto-enabled"
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!brand.payment?.cryptoEnabled}
+                  disabled={!brand.payment?.receiver}
+                  onChange={(e) => setBrand({
+                    ...brand,
+                    payment: { ...(brand.payment || {}), cryptoEnabled: e.target.checked }
+                  })}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                <label htmlFor="brand-payment-cash-enabled" className="text-sm text-muted-foreground">Enable Cash</label>
+                <input
+                  id="brand-payment-cash-enabled"
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!brand.payment?.cashEnabled}
+                  onChange={(e) => setBrand({
+                    ...brand,
+                    payment: { ...(brand.payment || {}), cashEnabled: e.target.checked }
+                  })}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
+                <label htmlFor="brand-payment-skip-payments" className="text-sm text-muted-foreground">
+                  Manual mobile money recording
+                  <span className="block text-xs text-muted-foreground font-normal">Record sale without Paystack popup</span>
+                </label>
+                <input
+                  id="brand-payment-skip-payments"
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={!!brand.payment?.skipPayments}
+                  disabled={!brand.payment?.mobileMoneyEnabled}
+                  onChange={(e) => setBrand({
+                    ...brand,
+                    payment: { ...(brand.payment || {}), skipPayments: e.target.checked }
+                  })}
+                />
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
               <label htmlFor="brand-payment-receiver" className="text-sm text-muted-foreground">Crypto Receiver (wallet)</label>
               <input
@@ -714,7 +829,11 @@ export default function BrandEditorPage() {
                 value={brand.payment?.receiver || ""}
                 onChange={(e) => setBrand({
                   ...brand,
-                  payment: { ...(brand.payment || {}), receiver: e.target.value }
+                  payment: {
+                    ...(brand.payment || {}),
+                    receiver: e.target.value,
+                    ...(e.target.value ? {} : { cryptoEnabled: false }),
+                  }
                 })}
                 placeholder="0x... (wallet address)"
               />
@@ -727,7 +846,11 @@ export default function BrandEditorPage() {
                 value={brand.payment?.paystackPublicKey || ""}
                 onChange={(e) => setBrand({
                   ...brand,
-                  payment: { ...(brand.payment || {}), paystackPublicKey: e.target.value }
+                  payment: {
+                    ...(brand.payment || {}),
+                    paystackPublicKey: e.target.value,
+                    ...(e.target.value ? {} : { mobileMoneyEnabled: false, skipPayments: false }),
+                  }
                 })}
                 placeholder="pk_live_xxx or pk_test_xxx"
               />

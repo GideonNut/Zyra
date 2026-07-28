@@ -1,0 +1,161 @@
+   ▲ Next.js 15.4.10
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 40.0s
+
+./node_modules/.pnpm/ox@0.14.20_typescript@5.9.3_zod@3.25.76/node_modules/ox/_esm/tempo/internal/virtualMasterPool.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/ox@0.14.20_typescript@5.9.3_zod@3.25.76/node_modules/ox/_esm/tempo/internal/virtualMasterPool.js
+./node_modules/.pnpm/ox@0.14.20_typescript@5.9.3_zod@3.25.76/node_modules/ox/_esm/tempo/VirtualMaster.js
+./node_modules/.pnpm/ox@0.14.20_typescript@5.9.3_zod@3.25.76/node_modules/ox/_esm/tempo/index.js
+./node_modules/.pnpm/viem@2.48.8_bufferutil@4.1._20e01d5651a6256a9c174467c54cff80/node_modules/viem/_esm/tempo/chainConfig.js
+./node_modules/.pnpm/viem@2.48.8_bufferutil@4.1._20e01d5651a6256a9c174467c54cff80/node_modules/viem/_esm/chains/definitions/tempoDevnet.js
+./node_modules/.pnpm/viem@2.48.8_bufferutil@4.1._20e01d5651a6256a9c174467c54cff80/node_modules/viem/_esm/chains/index.js
+./node_modules/.pnpm/@coinbase+cdp-sdk@1.48.2_bu_a9be4f0075627a6d114e228a28f1a0bd/node_modules/@coinbase/cdp-sdk/_esm/accounts/evm/networkToChainResolver.js
+./node_modules/.pnpm/@coinbase+cdp-sdk@1.48.2_bu_a9be4f0075627a6d114e228a28f1a0bd/node_modules/@coinbase/cdp-sdk/_esm/accounts/evm/toEvmSmartAccount.js
+./node_modules/.pnpm/@coinbase+cdp-sdk@1.48.2_bu_a9be4f0075627a6d114e228a28f1a0bd/node_modules/@coinbase/cdp-sdk/_esm/accounts/evm/toEvmDelegatedAccount.js
+./node_modules/.pnpm/@coinbase+cdp-sdk@1.48.2_bu_a9be4f0075627a6d114e228a28f1a0bd/node_modules/@coinbase/cdp-sdk/_esm/index.js
+./node_modules/.pnpm/@base-org+account@2.5.0_@ty_363edba61888bcdda8b6154333069c3a/node_modules/@base-org/account/dist/interface/payment/getOrCreateSubscriptionOwnerWallet.js
+./node_modules/.pnpm/@base-org+account@2.5.0_@ty_363edba61888bcdda8b6154333069c3a/node_modules/@base-org/account/dist/interface/payment/index.node.js
+./node_modules/.pnpm/@base-org+account@2.5.0_@ty_363edba61888bcdda8b6154333069c3a/node_modules/@base-org/account/dist/index.node.js
+./node_modules/.pnpm/thirdweb@5.119.4_@hey-api+o_b04554d7f23064b591a7c0184238775c/node_modules/thirdweb/dist/esm/wallets/base-account/base-account-web.js
+./node_modules/.pnpm/thirdweb@5.119.4_@hey-api+o_b04554d7f23064b591a7c0184238775c/node_modules/thirdweb/dist/esm/wallets/create-wallet.js
+./node_modules/.pnpm/thirdweb@5.119.4_@hey-api+o_b04554d7f23064b591a7c0184238775c/node_modules/thirdweb/dist/esm/react/web/hooks/wallets/useAutoConnect.js
+./node_modules/.pnpm/thirdweb@5.119.4_@hey-api+o_b04554d7f23064b591a7c0184238775c/node_modules/thirdweb/dist/esm/exports/react.js
+./src/app/layout.tsx
+
+ ✓ Compiled successfully in 61s
+   Linting and checking validity of types ...
+
+./src/app/admin/brands/[slug]/page.tsx
+6:10  Warning: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
+6:16  Warning: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+6:29  Warning: 'CardHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+6:41  Warning: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/api/paystack/initialize/route.ts
+2:10  Warning: 'saveInvoice' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/c/[company]/page.tsx
+76:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+80:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+84:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+88:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/docs/currency-conversion/page.tsx
+4:10  Warning: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
+4:16  Warning: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+4:29  Warning: 'CardHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+4:41  Warning: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/docs/faq/page.tsx
+4:10  Warning: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
+4:16  Warning: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+4:29  Warning: 'CardHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+4:41  Warning: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/page.tsx
+421:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+425:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+429:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+433:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+526:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/unsubscribe/page.tsx
+41:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/[id]/page.tsx
+334:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/email-manager.tsx
+7:10  Warning: 'Badge' is defined but never used.  @typescript-eslint/no-unused-vars
+82:14  Warning: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/payment-form.tsx
+531:35  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/ui/network-selector.tsx
+91:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/ui/token-selector.tsx
+134:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+WhatsApp credentials not configured. Notifications will be disabled.
+WhatsApp credentials not configured. Notifications will be disabled.
+   Generating static pages (0/43) ...
+WhatsApp credentials not configured. Notifications will be disabled.
+   Generating static pages (10/43) 
+WhatsApp credentials not configured. Notifications will be disabled.
+   Generating static pages (21/43) 
+   Generating static pages (32/43) 
+ ✓ Generating static pages (43/43)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                         Size  First Load JS
+┌ ○ /                                              225 B         426 kB
+├ ○ /_not-found                                     1 kB         117 kB
+├ ƒ /[id]                                        16.3 kB         148 kB
+├ ○ /admin                                       19.3 kB         178 kB
+├ ƒ /admin/brands/[slug]                          146 kB         278 kB
+├ ƒ /admin/companies/[slug]                      6.16 kB         145 kB
+├ ƒ /api/admin/auth                                217 B         116 kB
+├ ƒ /api/admin/companies                           217 B         116 kB
+├ ƒ /api/admin/companies/[slug]/analytics          217 B         116 kB
+├ ƒ /api/admin/contact-interests                   217 B         116 kB
+├ ƒ /api/admin/send-email                          217 B         116 kB
+├ ƒ /api/admin/settings                            217 B         116 kB
+├ ƒ /api/admin/stats                               217 B         116 kB
+├ ƒ /api/brands/[slug]                             217 B         116 kB
+├ ƒ /api/companies/[slug]/addresses                217 B         116 kB
+├ ƒ /api/companies/[slug]/mobile-money-invoices    217 B         116 kB
+├ ƒ /api/companies/address-lookup                  217 B         116 kB
+├ ƒ /api/contact-interest                          217 B         116 kB
+├ ƒ /api/create-payment-link                       217 B         116 kB
+├ ƒ /api/invoice/[id]                              217 B         116 kB
+├ ƒ /api/mobile-money-invoices                     217 B         116 kB
+├ ƒ /api/payment-link/[id]                         217 B         116 kB
+├ ƒ /api/payment-links                             217 B         116 kB
+├ ƒ /api/payments                                  217 B         116 kB
+├ ƒ /api/paystack/initialize                       217 B         116 kB
+├ ƒ /api/paystack/verify                           217 B         116 kB
+├ ƒ /api/paystack/webhook                          217 B         116 kB
+├ ƒ /api/test-firebase                             217 B         116 kB
+├ ƒ /api/test-firebase-create                      217 B         116 kB
+├ ƒ /api/transaction-registry                      217 B         116 kB
+├ ƒ /api/unsubscribe                               217 B         116 kB
+├ ƒ /api/webhooks/thirdweb-payment                 217 B         116 kB
+├ ƒ /api/whatsapp/send                             217 B         116 kB
+├ ƒ /c/[company]                                 1.52 kB         427 kB
+├ ○ /docs                                        4.82 kB         133 kB
+├ ○ /docs/create-first-invoice                   5.12 kB         134 kB
+├ ○ /docs/crypto-payments                        4.41 kB         133 kB
+├ ○ /docs/crypto-to-fiat                         4.92 kB         134 kB
+├ ○ /docs/currency-conversion                    3.89 kB         133 kB
+├ ○ /docs/exporting-invoices                     4.07 kB         133 kB
+├ ○ /docs/faq                                     3.9 kB         140 kB
+├ ○ /docs/getting-started                        4.62 kB         133 kB
+├ ○ /docs/invoice-status                         4.09 kB         133 kB
+├ ○ /docs/mobile-money                           4.11 kB         133 kB
+├ ○ /docs/payment-methods                        5.27 kB         134 kB
+├ ○ /docs/security                               4.39 kB         133 kB
+├ ○ /docs/templates                              4.39 kB         133 kB
+├ ○ /docs/whatsapp-integration                   4.35 kB         133 kB
+├ ƒ /invoice/[id]                                5.52 kB         262 kB
+├ ○ /payment/callback                            2.51 kB         128 kB
+└ ○ /unsubscribe                                 2.36 kB         136 kB
++ First Load JS shared by all                     116 kB
+  ├ chunks/2d4b39c2-7e1a96b2d291a8cb.js          54.1 kB
+  ├ chunks/34928-78fe44d4b256fed5.js             44.3 kB
+  ├ chunks/webpack-4fcff725a12a243a.js           17.1 kB
+  └ other shared chunks (total)                    235 B
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

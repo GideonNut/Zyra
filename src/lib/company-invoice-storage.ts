@@ -1,5 +1,20 @@
 import { getFirestoreInstance, COLLECTIONS } from './firestore';
 
+export interface CompanyCashInvoice {
+  id: string;
+  title: string;
+  description: string;
+  amount: string;
+  currency: string;
+  paymentMethod: 'cash';
+  reference: string;
+  customer: Record<string, unknown>;
+  paid_at: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+  companySlug: string;
+}
+
 export interface CompanyMobileMoneyInvoice {
   id: string;
   title: string;
@@ -30,7 +45,7 @@ export interface CompanyCryptoInvoice {
   companySlug: string;
 }
 
-export type CompanyInvoice = CompanyMobileMoneyInvoice | CompanyCryptoInvoice;
+export type CompanyInvoice = CompanyMobileMoneyInvoice | CompanyCryptoInvoice | CompanyCashInvoice;
 
 export async function getAllCompanyInvoices(slug: string): Promise<CompanyInvoice[]> {
   try {
@@ -76,7 +91,12 @@ export async function getCompanyInvoiceById(id: string, slug?: string): Promise<
 export async function saveCompanyInvoice(slug: string, invoice: Omit<CompanyInvoice, 'id' | 'createdAt' | 'companySlug'>): Promise<CompanyInvoice> {
   try {
     const db = getFirestoreInstance();
-    const prefix = invoice.paymentMethod === 'crypto' ? 'crypto' : 'mobile_money';
+    const prefix =
+      invoice.paymentMethod === 'crypto'
+        ? 'crypto'
+        : invoice.paymentMethod === 'cash'
+          ? 'cash'
+          : 'mobile_money';
     const id = `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     const createdAt = new Date().toISOString();
     
@@ -88,6 +108,13 @@ export async function saveCompanyInvoice(slug: string, invoice: Omit<CompanyInvo
         createdAt,
         companySlug: slug,
       } as CompanyCryptoInvoice;
+    } else if (invoice.paymentMethod === 'cash') {
+      full = {
+        ...invoice,
+        id,
+        createdAt,
+        companySlug: slug,
+      } as CompanyCashInvoice;
     } else {
       full = {
         ...invoice,

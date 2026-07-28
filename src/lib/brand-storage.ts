@@ -18,6 +18,10 @@ export interface Brand {
   payment: {
     receiver: string;
     paystackPublicKey: string;
+    skipPayments?: boolean;
+    cashEnabled?: boolean;
+    mobileMoneyEnabled?: boolean;
+    cryptoEnabled?: boolean;
   };
   whatsapp?: {
     enabled: boolean;

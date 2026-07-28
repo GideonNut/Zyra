@@ -11,6 +11,8 @@ export interface InventoryItem {
   quantity: number;
   sku?: string;
   imageUrl?: string;
+  /** Allow selling ½ and ¼ unit quantities at checkout */
+  allowHalfQuarter?: boolean;
 }
 
 export type Brand = {
@@ -36,6 +38,10 @@ export type Brand = {
   payment?: {
     receiver?: string;
     paystackPublicKey?: string;
+    skipPayments?: boolean;
+    cashEnabled?: boolean;
+    mobileMoneyEnabled?: boolean;
+    cryptoEnabled?: boolean;
   };
   whatsapp?: {
     enabled?: boolean;
