@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useCallback, useState } from "react";
 import { usePathname } from "next/navigation";
 
 export interface InventoryItem {
@@ -59,6 +59,7 @@ export type Brand = {
 interface BrandContextType {
   brand?: Brand;
   slug?: string;
+  refreshBrand: () => Promise<void>;
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
@@ -93,44 +94,53 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     return undefined;
   }, [pathname]);
 
+  const refreshBrand = useCallback(async () => {
+    try {
+      if (!slug) {
+        setBrand(undefined);
+        return;
+      }
+
+      const staticRes = await fetch(`/brands/${slug}/brand.json`, { cache: "no-store" });
+      if (staticRes.ok) {
+        const data: Brand = await staticRes.json();
+        setBrand(data);
+        return;
+      }
+
+      const apiRes = await fetch(`/api/brands/${slug}`, { cache: "no-store" });
+      if (apiRes.ok) {
+        const data: Brand = await apiRes.json();
+        setBrand(data);
+        return;
+      }
+
+      setBrand(undefined);
+    } catch {
+      setBrand(undefined);
+    }
+  }, [slug]);
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      try {
-        if (!slug) {
-          setBrand(undefined);
-          return;
-        }
-        // Load static brand json from public/brands/<slug>/brand.json, fall back to Firestore
-        const staticRes = await fetch(`/brands/${slug}/brand.json`, { cache: "no-store" });
-        if (staticRes.ok) {
-          const data: Brand = await staticRes.json();
-          if (!cancelled) setBrand(data);
-          return;
-        }
-
-        const apiRes = await fetch(`/api/brands/${slug}`, { cache: "no-store" });
-        if (apiRes.ok) {
-          const data: Brand = await apiRes.json();
-          if (!cancelled) setBrand(data);
-          return;
-        }
-
+      if (!slug) {
         if (!cancelled) setBrand(undefined);
-      } catch {
-        if (!cancelled) setBrand(undefined);
+        return;
       }
+
+      await refreshBrand();
     }
     load();
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [slug, refreshBrand]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     applyCssVars(brand?.colors);
   }, [brand]);
 
-  const value = useMemo(() => ({ brand, slug }), [brand, slug]);
+  const value = useMemo(() => ({ brand, slug, refreshBrand }), [brand, slug, refreshBrand]);
   return <BrandContext.Provider value={value}>{children}</BrandContext.Provider>;
 }
 

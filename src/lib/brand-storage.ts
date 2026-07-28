@@ -1,3 +1,5 @@
+import fs from 'fs/promises';
+import path from 'path';
 import { getFirestoreInstance, COLLECTIONS } from './firestore';
 
 export interface Brand {
@@ -22,6 +24,19 @@ export interface Brand {
     cashEnabled?: boolean;
     mobileMoneyEnabled?: boolean;
     cryptoEnabled?: boolean;
+  };
+  inventory?: {
+    enabled?: boolean;
+    items?: Array<{
+      id: string;
+      name: string;
+      description?: string;
+      price: number;
+      quantity: number;
+      sku?: string;
+      imageUrl?: string;
+      allowHalfQuarter?: boolean;
+    }>;
   };
   whatsapp?: {
     enabled: boolean;
@@ -93,6 +108,53 @@ export async function getBrandById(id: string): Promise<Brand | null> {
   } catch (error) {
     console.error('Error fetching brand by ID from Firestore:', error);
     return null;
+  }
+}
+
+async function writeBrandJsonFile(slug: string, brand: Brand): Promise<void> {
+  try {
+    const filePath = path.join(process.cwd(), 'public', 'brands', slug, 'brand.json');
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, JSON.stringify(brand, null, 2), 'utf8');
+  } catch (error) {
+    console.warn('Failed to update public brand json file:', error);
+  }
+}
+
+export async function updateBrandInventory(slug: string, items: Array<{ id: string; quantity: number }>): Promise<Brand | null> {
+  try {
+    const existing = await getBrandBySlug(slug);
+    if (!existing) {
+      return null;
+    }
+
+    const updatedItems = (existing.inventory?.items || []).map((item) => {
+      const saleItem = items.find((entry) => entry.id === item.id);
+      if (!saleItem || saleItem.quantity <= 0) {
+        return item;
+      }
+
+      const nextQuantity = Math.max(0, Number((item.quantity - saleItem.quantity).toFixed(2)));
+      return { ...item, quantity: nextQuantity };
+    });
+
+    const updatedBrand: Brand = {
+      ...existing,
+      inventory: {
+        ...(existing.inventory || {}),
+        enabled: existing.inventory?.enabled ?? false,
+        items: updatedItems,
+      },
+      updatedAt: new Date().toISOString(),
+    };
+
+    const db = getFirestoreInstance();
+    await db.collection(COLLECTIONS.BRANDS).doc(existing.id).set(updatedBrand, { merge: true });
+    await writeBrandJsonFile(slug, updatedBrand);
+    return updatedBrand;
+  } catch (error) {
+    console.error('Error updating brand inventory:', error);
+    throw new Error('Failed to update brand inventory');
   }
 }
 

@@ -90,7 +90,7 @@ interface GlobalSettings {
 
 export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
   const account = useActiveAccount();
-  const { brand, slug } = useBrand();
+  const { brand, slug, refreshBrand } = useBrand();
   const [isCreating, setIsCreating] = useState(false);
   const [paymentLink, setPaymentLink] = useState<string | null>(null);
   const [selectedToken, setSelectedToken] = useState<TokenMetadata | null>(null);
@@ -333,6 +333,20 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
         const data = await response.json();
 
         if (data.manual) {
+          if (brand?.inventory?.enabled && values.selectedItems?.length && slug) {
+            try {
+              await fetch(`/api/brands/${slug}/inventory`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  items: values.selectedItems.map((item) => ({ id: item.id, quantity: item.quantity })),
+                }),
+              });
+            } catch (inventoryError) {
+              console.error('Failed to update inventory after sale:', inventoryError);
+            }
+          }
+          await refreshBrand();
           alert(isCash ? 'Cash sale recorded successfully' : 'Sale recorded successfully without payment');
         } else if (!isCash) {
           if (typeof window !== 'undefined' && window.PaystackPop) {
