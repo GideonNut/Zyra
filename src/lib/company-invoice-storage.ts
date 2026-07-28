@@ -52,13 +52,18 @@ export async function getAllCompanyInvoices(slug: string): Promise<CompanyInvoic
     const db = getFirestoreInstance();
     const snapshot = await db.collection(COLLECTIONS.COMPANY_INVOICES)
       .where('companySlug', '==', slug)
-      .orderBy('createdAt', 'desc')
       .get();
-    
-    return snapshot.docs.map(doc => ({
+
+    const invoices = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     })) as CompanyInvoice[];
+
+    return invoices.sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
   } catch (error) {
     console.error('Error fetching company invoices from Firestore:', error);
     return [];
