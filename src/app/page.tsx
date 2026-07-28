@@ -1020,34 +1020,14 @@ export default function Home() {
           </p>
         </div>
 
-        {salesDashboardMode && (
-          <Card className="mb-6 border-primary/20 bg-primary/5">
-            <CardContent className="pt-6">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">Sales-focused view</h2>
-                  <p className="text-sm text-muted-foreground">
-                    This layout highlights invoices and sales activity so your team can monitor payments quickly.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">Sales</Badge>
-                  <Badge variant="outline">Invoices</Badge>
-                  <Badge variant="outline">Payments</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <div className="space-y-4 md:space-y-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             <Card>
               <CardContent className="px-3 md:px-6 py-3 md:py-4">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Total Invoices</p>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Total Sales</p>
                     <p className="text-2xl md:text-3xl font-bold">{paymentLinks.length + mobileMoneyInvoices.length}</p>
                   </div>
                   <FileText className="h-6 md:h-8 w-6 md:w-8 text-muted-foreground flex-shrink-0" />
@@ -1058,7 +1038,7 @@ export default function Home() {
               <CardContent className="px-3 md:px-6 py-3 md:py-4">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Paid</p>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Completed Sales</p>
                     <p className="text-2xl md:text-3xl font-bold text-green-600">
                       {paymentLinks.filter(link => getPaymentStatus(link.id) === 'Paid').length + mobileMoneyInvoices.length}
                     </p>
@@ -1073,7 +1053,7 @@ export default function Home() {
               <CardContent className="px-3 md:px-6 py-3 md:py-4">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending</p>
+                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending Sales</p>
                     <p className="text-2xl md:text-3xl font-bold">
                       {paymentLinks.filter(link => getPaymentStatus(link.id) === 'Unpaid').length}
                     </p>
@@ -1084,6 +1064,23 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
+            {salesDashboardMode && (
+              <Card>
+                <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Stock On Hand</p>
+                      <p className="text-2xl md:text-3xl font-bold">
+                        {brand?.inventory?.items?.reduce((total, item) => total + (item.quantity || 0), 0) ?? 0}
+                      </p>
+                    </div>
+                    <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="h-3 md:h-4 w-3 md:w-4 text-primary" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Advanced Filter */}
