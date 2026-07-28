@@ -113,6 +113,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showInterestFormAfterInvoice, setShowInterestFormAfterInvoice] = useState(false);
+  const [salesDashboardMode, setSalesDashboardMode] = useState(false);
   const { brand, slug } = useBrand();
   const isMainAppExperience = !slug;
   const [filters, setFilters] = useState<FilterState>({
@@ -136,6 +137,22 @@ export default function Home() {
       fetchData();
     }
   }, [account?.address, slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/admin/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setSalesDashboardMode(Boolean(data.salesDashboardMode));
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard settings:', error);
+      }
+    }
+
+    loadSettings();
+  }, []);
 
   // Fetch mobile money invoices independently of wallet connection
   useEffect(() => {
@@ -957,8 +974,8 @@ export default function Home() {
               <DialogTrigger asChild>
                 <Button size="sm" className="text-xs md:text-sm">
                   <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">Create Invoice</span>
-                  <span className="sm:hidden">Create</span>
+                  <span className="hidden sm:inline">{salesDashboardMode ? "Record Sale" : "Create Invoice"}</span>
+                  <span className="sm:hidden">{salesDashboardMode ? "Sale" : "Create"}</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1005,9 +1022,35 @@ export default function Home() {
 
       <main className="p-4 md:p-8">
         <div className="mb-4 md:mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 md:mb-3">Dashboard</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Manage your invoices and track payments</p>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 md:mb-3">
+            {salesDashboardMode ? "Sales Dashboard" : "Dashboard"}
+          </h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            {salesDashboardMode
+              ? "Track sales activity, invoices, and payments from one focused view"
+              : "Manage your invoices and track payments"}
+          </p>
         </div>
+
+        {salesDashboardMode && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold">Sales-focused view</h2>
+                  <p className="text-sm text-muted-foreground">
+                    This layout highlights invoices and sales activity so your team can monitor payments quickly.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary">Sales</Badge>
+                  <Badge variant="outline">Invoices</Badge>
+                  <Badge variant="outline">Payments</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="space-y-4 md:space-y-6">
           {/* Stats Cards */}

@@ -3,6 +3,7 @@ import { getFirestoreInstance } from '@/lib/firestore';
 
 interface GlobalSettings {
   feeRecipient?: string;
+  salesDashboardMode?: boolean;
   updatedAt?: number;
 }
 
