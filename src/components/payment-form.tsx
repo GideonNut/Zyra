@@ -334,19 +334,27 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
 
         if (data.manual) {
           if (brand?.inventory?.enabled && values.selectedItems?.length && slug) {
-            try {
-              await fetch(`/api/brands/${slug}/inventory`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  items: values.selectedItems.map((item) => ({ id: item.id, quantity: item.quantity })),
-                }),
+            void fetch(`/api/brands/${slug}/inventory`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                items: values.selectedItems.map((item) => ({ id: item.id, quantity: item.quantity })),
+              }),
+            })
+              .then(async (inventoryResponse) => {
+                if (!inventoryResponse.ok) {
+                  console.error('Inventory update failed after sale record', await inventoryResponse.text());
+                }
+              })
+              .catch((inventoryError) => {
+                console.error('Failed to update inventory after sale:', inventoryError);
+              })
+              .finally(() => {
+                void refreshBrand();
               });
-            } catch (inventoryError) {
-              console.error('Failed to update inventory after sale:', inventoryError);
-            }
+          } else {
+            await refreshBrand();
           }
-          await refreshBrand();
           alert(isCash ? 'Cash sale recorded successfully' : 'Sale recorded successfully without payment');
         } else if (!isCash) {
           if (typeof window !== 'undefined' && window.PaystackPop) {
