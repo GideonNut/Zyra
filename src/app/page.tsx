@@ -113,6 +113,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showInterestFormAfterInvoice, setShowInterestFormAfterInvoice] = useState(false);
+  const { brand, slug } = useBrand();
+  const isMainAppExperience = !slug;
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: [],
@@ -123,7 +125,6 @@ export default function Home() {
   });
   const [sortBy, setSortBy] = useState<string>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const { brand, slug } = useBrand();
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -250,7 +251,9 @@ export default function Home() {
 
   const handleInvoiceCreated = () => {
     setIsModalOpen(false);
-    setShowInterestFormAfterInvoice(true);
+    if (isMainAppExperience) {
+      setShowInterestFormAfterInvoice(true);
+    }
     fetchData(); // Refresh the data
   };
 
@@ -966,20 +969,22 @@ export default function Home() {
               </DialogContent>
             </Dialog>
 
-            {/* Interest Form Dialog - Shows after creating an invoice */}
-            <Dialog open={showInterestFormAfterInvoice} onOpenChange={setShowInterestFormAfterInvoice}>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Customize Your Zyra Experience</DialogTitle>
-                  <DialogDescription>
-                    To customize Zyra for your business, please share your details with us
-                  </DialogDescription>
-                </DialogHeader>
-                <ContactInterestForm 
-                  onSuccess={() => setShowInterestFormAfterInvoice(false)}
-                />
-              </DialogContent>
-            </Dialog>
+            {/* Interest Form Dialog - Shows only on the main app experience after creating an invoice */}
+            {isMainAppExperience && (
+              <Dialog open={showInterestFormAfterInvoice} onOpenChange={setShowInterestFormAfterInvoice}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Customize Your Zyra Experience</DialogTitle>
+                    <DialogDescription>
+                      To customize Zyra for your business, please share your details with us
+                    </DialogDescription>
+                  </DialogHeader>
+                  <ContactInterestForm 
+                    onSuccess={() => setShowInterestFormAfterInvoice(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            )}
 
             <div className="hidden sm:flex items-center gap-2 md:gap-3">
               <span className="text-xs md:text-sm text-muted-foreground truncate">
