@@ -144,6 +144,13 @@ export default function Home() {
     setSalesDashboardMode(Boolean(brand?.salesDashboardMode));
   }, [brand?.salesDashboardMode]);
 
+  // Fetch data when brand is loaded and account is connected
+  useEffect(() => {
+    if (account?.address && brand) {
+      fetchData();
+    }
+  }, [brand?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Fetch mobile money invoices independently of wallet connection
   useEffect(() => {
     const fetchMobileMoneyInvoices = async () => {
