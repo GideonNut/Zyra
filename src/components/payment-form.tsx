@@ -598,11 +598,12 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                         return (
                           <div 
                             key={item.id} 
-                            className={`p-4 border rounded-lg transition-colors ${
+                            className={`p-4 border rounded-lg transition-colors cursor-pointer ${
                               isSelected 
                                 ? 'border-primary bg-primary/5 shadow-sm' 
                                 : 'border-border hover:border-primary/50'
                             }`}
+                            onClick={() => toggleItemSelection(item)}
                           >
                             <div className="flex items-start gap-3">
                               {item.imageUrl && (
@@ -644,7 +645,7 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                                 <div className="flex items-center justify-between mt-3">
                                   {isSelected ? (
                                     <>
-                                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+                                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap" onClick={(e) => e.stopPropagation()}>
                                         {item.allowHalfQuarter && (
                                           <div className="flex gap-1">
                                             <Button type="button" variant="secondary" size="sm" className="h-8 px-2 text-xs" onClick={() => setPortionQuantity(item.id, 1)}>Full</Button>
@@ -657,7 +658,10 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                                           type="button"
                                           variant="outline"
                                           size="sm"
-                                          onClick={() => handleQuantityChange(item.id, (selectedItem?.quantity || 1) - (item.allowHalfQuarter ? 0.25 : 1))}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleQuantityChange(item.id, (selectedItem?.quantity || 1) - (item.allowHalfQuarter ? 0.25 : 1));
+                                          }}
                                           disabled={!selectedItem?.quantity || selectedItem.quantity <= 0}
                                           className="h-8 w-8 p-0"
                                         >
@@ -670,17 +674,20 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                                           max={availableStock > 0 ? availableStock : undefined}
                                           value={selectedItem?.quantity ?? 0}
                                           onChange={(e) => {
+                                            e.stopPropagation();
                                             const qty = parseFloat(e.target.value) || 0;
                                             const maxQty = availableStock > 0 ? availableStock : undefined;
                                             handleQuantityChange(item.id, maxQty ? Math.min(qty, maxQty) : qty);
                                           }}
                                           className="w-20 text-center h-8"
+                                          onClick={(e) => e.stopPropagation()}
                                         />
                                         <Button
                                           type="button"
                                           variant="outline"
                                           size="sm"
-                                          onClick={() => {
+                                          onClick={(e) => {
+                                            e.stopPropagation();
                                             const currentQty = selectedItem?.quantity || 0;
                                             const step = item.allowHalfQuarter ? 0.25 : 1;
                                             const maxQty = availableStock > 0 ? availableStock : undefined;
@@ -710,7 +717,10 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
                                       type="button"
                                       variant={availableStock === 0 ? "secondary" : "outline"}
                                       size="sm"
-                                      onClick={() => toggleItemSelection(item)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleItemSelection(item);
+                                      }}
                                       disabled={availableStock === 0}
                                       className="w-full"
                                     >

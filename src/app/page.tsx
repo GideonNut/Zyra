@@ -26,12 +26,13 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { FileText, Plus, Check, Clock, Settings, Twitter, Send } from "lucide-react";
+import { FileText, Plus, Check, Clock, Settings, Twitter, Send, Eye } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { InvoicePDFGenerator } from "@/components/invoice-pdf-generator";
 import { AdvancedFilter, FilterState } from "@/components/ui/advanced-filter";
 import { ExportInvoices } from "@/components/export-invoices";
+import { InventoryDialog } from "@/components/inventory-dialog";
 import { filterInvoices, sortInvoices, Invoice } from "@/lib/invoice-filtering";
 import { useBrand } from "@/contexts/brand-context";
 import { useTheme } from "@/contexts/theme-context";
@@ -114,6 +115,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showInterestFormAfterInvoice, setShowInterestFormAfterInvoice] = useState(false);
   const [salesDashboardMode, setSalesDashboardMode] = useState(false);
+  const [inventoryDialogOpen, setInventoryDialogOpen] = useState(false);
   const { brand, slug } = useBrand();
   const isMainAppExperience = !slug;
   const [filters, setFilters] = useState<FilterState>({
@@ -1065,7 +1067,7 @@ export default function Home() {
               </CardContent>
             </Card>
             {salesDashboardMode && (
-              <Card>
+              <Card className="cursor-pointer hover:border-primary/50 transition-colors">
                 <CardContent className="px-3 md:px-6 py-3 md:py-4">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
@@ -1074,8 +1076,18 @@ export default function Home() {
                         {brand?.inventory?.items?.reduce((total, item) => total + (item.quantity || 0), 0) ?? 0}
                       </p>
                     </div>
-                    <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <TrendingUp className="h-3 md:h-4 w-3 md:w-4 text-primary" />
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <TrendingUp className="h-3 md:h-4 w-3 md:w-4 text-primary" />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setInventoryDialogOpen(true)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -1093,6 +1105,7 @@ export default function Home() {
                 filters={filters}
                 onFiltersChange={setFilters}
                 onClearFilters={clearFilters}
+                salesDashboardMode={salesDashboardMode}
               />
             </CardContent>
           </Card>
@@ -1250,6 +1263,13 @@ export default function Home() {
           </Card>
         </div>
       </main>
+
+      {/* Inventory Dialog */}
+      <InventoryDialog
+        open={inventoryDialogOpen}
+        onOpenChange={setInventoryDialogOpen}
+        inventory={brand?.inventory || { items: [] }}
+      />
     </div>
   );
 }

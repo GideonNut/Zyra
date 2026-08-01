@@ -31,6 +31,7 @@ interface AdvancedFilterProps {
   onFiltersChange: (filters: FilterState) => void;
   onClearFilters: () => void;
   className?: string;
+  salesDashboardMode?: boolean;
 }
 
 const STATUS_OPTIONS = [
@@ -48,7 +49,8 @@ export function AdvancedFilter({
   filters, 
   onFiltersChange, 
   onClearFilters, 
-  className 
+  className,
+  salesDashboardMode = false
 }: AdvancedFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -57,6 +59,15 @@ export function AdvancedFilter({
       ...filters,
       [key]: value,
     });
+  };
+
+  const setTodayFilter = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    updateFilter("dateRange", { from: today, to: endOfDay });
   };
 
   const toggleStatus = (status: string) => {
@@ -96,6 +107,17 @@ export function AdvancedFilter({
 
       {/* Filter Toggle */}
       <div className="flex items-center gap-2">
+        {salesDashboardMode && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={setTodayFilter}
+            className="gap-2"
+          >
+            <CalendarIcon className="h-4 w-4" />
+            Today
+          </Button>
+        )}
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="gap-2">
