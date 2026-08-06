@@ -26,7 +26,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { FileText, Plus, Check, Clock, Settings, Twitter, Send, Eye } from "lucide-react";
+import { FileText, Plus, Check, Clock, Settings, Twitter, Send, Eye, Trash2 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AdvancedFilter, FilterState } from "@/components/ui/advanced-filter";
@@ -123,6 +123,7 @@ export default function Home() {
   const [salesDashboardMode, setSalesDashboardMode] = useState(false);
   const [inventoryDialogOpen, setInventoryDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(null);
   const { brand, slug } = useBrand();
   const isMainAppExperience = !slug;
   const [filters, setFilters] = useState<FilterState>({
@@ -429,6 +430,40 @@ export default function Home() {
 
   const closeInvoiceDetails = () => {
     setSelectedInvoice(null);
+  };
+
+  const handleDeleteInvoice = async (invoice: Invoice) => {
+    const confirmed = window.confirm("Delete this recorded sale? This action cannot be undone.");
+    if (!confirmed) return;
+
+    setDeletingInvoiceId(invoice.id);
+
+    try {
+      const response = await fetch(`/api/invoice/${invoice.id}?type=${invoice.paymentMethod === "mobile_money" ? "mobile_money" : "crypto"}${slug ? `&companySlug=${encodeURIComponent(slug)}` : ""}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete sale");
+      }
+
+      if (selectedInvoice?.id === invoice.id) {
+        closeInvoiceDetails();
+      }
+
+      if (invoice.paymentMethod === "mobile_money") {
+        setMobileMoneyInvoices((prev) => prev.filter((item) => item.id !== invoice.id));
+      } else {
+        setPaymentLinks((prev) => prev.filter((link) => link.id !== invoice.id));
+        setPayments((prev) => prev.filter((payment) => payment.paymentLinkId !== invoice.id));
+      }
+    } catch (error) {
+      console.error("Error deleting sale:", error);
+      alert(error instanceof Error ? error.message : "Failed to delete sale");
+    } finally {
+      setDeletingInvoiceId(null);
+    }
   };
 
   if (!account) {
@@ -1437,24 +1472,41 @@ export default function Home() {
                             {formatDate(invoice.createdAt)}
                           </TableCell>
                           <TableCell className="py-3 md:py-4">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (salesDashboardMode) {
-                                  openInvoiceDetails(invoice);
-                                } else if (invoice.paymentMethod === "mobile_money") {
-                                  window.open(`/invoice/${invoice.id}`, '_blank');
-                                } else {
-                                  window.open(`/${invoice.id}`, '_blank');
-                                }
-                              }}
-                              className="text-xs"
-                            >
-                              <Eye className="h-3 w-3 mr-1" />
-                              <span className="hidden sm:inline">{salesDashboardMode ? "View" : "Open"}</span>
-                            </Button>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (salesDashboardMode) {
+                                    openInvoiceDetails(invoice);
+                                  } else if (invoice.paymentMethod === "mobile_money") {
+                                    window.open(`/invoice/${invoice.id}`, '_blank');
+                                  } else {
+                                    window.open(`/${invoice.id}`, '_blank');
+                                  }
+                                }}
+                                className="text-xs"
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                <span className="hidden sm:inline">{salesDashboardMode ? "View" : "Open"}</span>
+                              </Button>
+                              {salesDashboardMode && (
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void handleDeleteInvoice(invoice);
+                                  }}
+                                  disabled={deletingInvoiceId === invoice.id}
+                                  className="text-xs"
+                                >
+                                  <Trash2 className="h-3 w-3 mr-1" />
+                                  <span className="hidden sm:inline">{deletingInvoiceId === invoice.id ? "Deleting" : "Delete"}</span>
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -1545,6 +1597,16 @@ export default function Home() {
                   <p className="mt-1 text-sm">{selectedInvoice.description}</p>
                 </div>
               )}
+
+              <div className="flex justify-end">
+                <Button
+                  variant="destructive"
+                  onClick={() => void handleDeleteInvoice(selectedInvoice)}
+                  disabled={deletingInvoiceId === selectedInvoice.id}
+                >
+                  {deletingInvoiceId === selectedInvoice.id ? "Deleting..." : "Delete Sale"}
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllInvoices } from '@/lib/invoice-storage';
-import { getCompanyInvoiceById } from '@/lib/company-invoice-storage';
+import { deleteCompanyInvoice, getCompanyInvoiceById } from '@/lib/company-invoice-storage';
+import { deleteCompanyCryptoInvoice } from '@/lib/crypto-invoice-storage';
 
 export async function GET(
   request: NextRequest,
@@ -41,6 +42,38 @@ export async function GET(
     console.error('Error fetching invoice:', error);
     return NextResponse.json(
       { error: 'Failed to fetch invoice' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const companySlug = searchParams.get('companySlug');
+    const type = searchParams.get('type')?.toLowerCase();
+
+    if (type === 'crypto') {
+      const deleted = await deleteCompanyCryptoInvoice(id, companySlug ?? undefined);
+      if (!deleted) {
+        return NextResponse.json({ error: 'Sale not found' }, { status: 404 });
+      }
+    } else {
+      const deleted = await deleteCompanyInvoice(id, companySlug ?? undefined);
+      if (!deleted) {
+        return NextResponse.json({ error: 'Sale not found' }, { status: 404 });
+      }
+    }
+
+    return NextResponse.json({ success: true, message: 'Sale deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting invoice:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete sale' },
       { status: 500 }
     );
   }

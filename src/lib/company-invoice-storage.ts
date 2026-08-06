@@ -137,3 +137,26 @@ export async function saveCompanyInvoice(slug: string, invoice: Omit<CompanyInvo
     throw new Error('Failed to save company invoice');
   }
 }
+
+export async function deleteCompanyInvoice(id: string, slug?: string): Promise<boolean> {
+  try {
+    const db = getFirestoreInstance();
+    const docRef = db.collection(COLLECTIONS.COMPANY_INVOICES).doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return false;
+    }
+
+    const data = doc.data() as CompanyInvoice | undefined;
+    if (slug && data?.companySlug !== slug) {
+      return false;
+    }
+
+    await docRef.delete();
+    return true;
+  } catch (error) {
+    console.error('Error deleting company invoice from Firestore:', error);
+    return false;
+  }
+}

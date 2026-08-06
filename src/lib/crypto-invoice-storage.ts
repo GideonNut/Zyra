@@ -63,6 +63,45 @@ export async function saveCompanyCryptoInvoice(
   }
 }
 
+export async function deleteCompanyCryptoInvoice(id: string, slug?: string): Promise<boolean> {
+  try {
+    const db = getFirestoreInstance();
+    const docRef = db.collection(COLLECTIONS.CRYPTO_INVOICES).doc(id);
+    const doc = await docRef.get();
+
+    if (doc.exists) {
+      const data = doc.data() as CryptoInvoice | undefined;
+      if (slug && data?.companySlug !== slug) {
+        return false;
+      }
+
+      await docRef.delete();
+      return true;
+    }
+
+    const snapshot = await db.collection(COLLECTIONS.CRYPTO_INVOICES)
+      .where('paymentLinkId', '==', id)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return false;
+    }
+
+    const targetDoc = snapshot.docs[0];
+    const data = targetDoc.data() as CryptoInvoice | undefined;
+    if (slug && data?.companySlug !== slug) {
+      return false;
+    }
+
+    await targetDoc.ref.delete();
+    return true;
+  } catch (error) {
+    console.error('Error deleting company crypto invoice from Firestore:', error);
+    return false;
+  }
+}
+
 export async function updateCryptoInvoiceStatus(
   paymentLinkId: string,
   status: 'paid' | 'unpaid',
