@@ -5,7 +5,7 @@ import { getBrandBySlug } from '@/lib/brand-storage';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customerName, phoneNumber, amount, currency, description, email, companySlug, skipPayment, paymentMethod } = body;
+    const { customerName, phoneNumber, amount, currency, description, email, companySlug, skipPayment, paymentMethod, selectedItems } = body;
 
     const isCashSale = paymentMethod === 'cash';
     const isManualMobileSale = !!skipPayment && !isCashSale;
@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
           phone_number: phoneNumber,
           original_amount: parseFloat(amount),
           original_currency: currency,
+          selectedItems: Array.isArray(selectedItems) ? selectedItems : [],
         },
       };
 
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
           phone_number: phoneNumber,
           description: description,
           company_slug: companySlug || null,
+          selectedItems: Array.isArray(selectedItems) ? selectedItems : [],
         },
         callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/callback`,
       }),

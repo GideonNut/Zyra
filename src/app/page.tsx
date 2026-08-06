@@ -4,7 +4,7 @@ import { ConnectButton } from "@/components/connect-button";
 import { DisconnectButton } from "@/components/disconnect-button";
 import { PaymentForm } from "@/components/payment-form";
 import { useActiveAccount } from "thirdweb/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bridge } from "thirdweb";
 import { client } from "@/lib/constants";
 import {
@@ -29,11 +29,10 @@ import {
 import { FileText, Plus, Check, Clock, Settings, Twitter, Send, Eye } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { InvoicePDFGenerator } from "@/components/invoice-pdf-generator";
 import { AdvancedFilter, FilterState } from "@/components/ui/advanced-filter";
 import { ExportInvoices } from "@/components/export-invoices";
 import { InventoryDialog } from "@/components/inventory-dialog";
-import { filterInvoices, sortInvoices, Invoice } from "@/lib/invoice-filtering";
+import { filterInvoices, sortInvoices, Invoice, getInvoiceAmount } from "@/lib/invoice-filtering";
 import { useBrand } from "@/contexts/brand-context";
 import { useTheme } from "@/contexts/theme-context";
 import Image from "next/image";
@@ -103,6 +102,13 @@ interface MobileMoneyInvoice {
     phone_number?: string;
     original_amount: number;
     original_currency: string;
+    selectedItems?: Array<{
+      id: string;
+      name: string;
+      price: number;
+      costPrice?: number;
+      quantity: number;
+    }>;
   };
 }
 
@@ -116,6 +122,7 @@ export default function Home() {
   const [showInterestFormAfterInvoice, setShowInterestFormAfterInvoice] = useState(false);
   const [salesDashboardMode, setSalesDashboardMode] = useState(false);
   const [inventoryDialogOpen, setInventoryDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const { brand, slug } = useBrand();
   const isMainAppExperience = !slug;
   const [filters, setFilters] = useState<FilterState>({
@@ -131,48 +138,41 @@ export default function Home() {
   const { theme } = useTheme();
 
   useEffect(() => {
-    setPaymentLinks([]);
-    setPayments([]);
-    setMobileMoneyInvoices([]);
-
-    if (account?.address) {
-      fetchData();
-    }
-  }, [account?.address, slug]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
     setSalesDashboardMode(Boolean(brand?.salesDashboardMode));
   }, [brand?.salesDashboardMode]);
 
-  // Fetch data when brand is loaded and account is connected
-  useEffect(() => {
-    if (account?.address && brand) {
-      fetchData();
+  const fetchMobileMoneyInvoices = useCallback(async () => {
+    try {
+      setMobileMoneyInvoices([]);
+      // Always use company-specific endpoint when slug is available for proper isolation
+      const url = slug
+        ? `/api/companies/${slug}/mobile-money-invoices`
+        : '/api/mobile-money-invoices?companySlug=';
+      const mobileMoneyResponse = await fetch(url, { cache: 'no-store' });
+      const mobileMoneyData = await mobileMoneyResponse.json();
+      setMobileMoneyInvoices(Array.isArray(mobileMoneyData.invoices) ? mobileMoneyData.invoices : []);
+    } catch (error) {
+      console.error('Error fetching mobile money invoices:', error);
+      setMobileMoneyInvoices([]);
     }
-  }, [brand?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [slug]);
 
-  // Fetch mobile money invoices independently of wallet connection
   useEffect(() => {
-    const fetchMobileMoneyInvoices = async () => {
-      try {
-        setMobileMoneyInvoices([]);
-        // Always use company-specific endpoint when slug is available for proper isolation
-        const url = slug
-          ? `/api/companies/${slug}/mobile-money-invoices`
-          : '/api/mobile-money-invoices?companySlug=';
-        const mobileMoneyResponse = await fetch(url);
-        const mobileMoneyData = await mobileMoneyResponse.json();
-        setMobileMoneyInvoices(Array.isArray(mobileMoneyData.invoices) ? mobileMoneyData.invoices : []);
-      } catch (error) {
-        console.error('Error fetching mobile money invoices:', error);
-        setMobileMoneyInvoices([]);
-      }
-    };
+    if (!account?.address) {
+      setPaymentLinks([]);
+      setPayments([]);
+      setMobileMoneyInvoices([]);
+      return;
+    }
 
-    fetchMobileMoneyInvoices();
-  }, [brand?.id, slug]);
+    void fetchData();
+  }, [account?.address, brand?.id, slug, fetchMobileMoneyInvoices]);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    void fetchMobileMoneyInvoices();
+  }, [fetchMobileMoneyInvoices]);
+
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setPaymentLinks([]);
@@ -183,11 +183,11 @@ export default function Home() {
       const linksUrl = slug
         ? `/api/payment-links?receiver=${account!.address}&companySlug=${encodeURIComponent(slug)}`
         : `/api/payment-links?receiver=${account!.address}`;
-      const linksResponse = await fetch(linksUrl);
+      const linksResponse = await fetch(linksUrl, { cache: 'no-store' });
       const linksData = await linksResponse.json();
 
       // Fetch all payments
-      const paymentsResponse = await fetch('/api/payments');
+      const paymentsResponse = await fetch('/api/payments', { cache: 'no-store' });
       const paymentsData = await paymentsResponse.json();
 
 
@@ -229,17 +229,18 @@ export default function Home() {
 
       setPaymentLinks(linksWithPrices);
       setPayments(paymentsData.data || []);
+      await fetchMobileMoneyInvoices();
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [account?.address, slug, fetchMobileMoneyInvoices]);
 
-  const getPaymentStatus = (linkId: string) => {
+  const getPaymentStatus = useCallback((linkId: string) => {
     const payment = payments.find(p => p.paymentLinkId === linkId);
     return payment ? 'Paid' : 'Unpaid';
-  };
+  }, [payments]);
 
   const formatAmount = (amount: string, decimals: number = 18) => {
     const num = Number(amount) / Math.pow(10, decimals);
@@ -262,17 +263,16 @@ export default function Home() {
     return new Date(dateString).toLocaleDateString();
   };
 
-
-  const handleInvoiceCreated = () => {
-    setIsModalOpen(false);
-    if (isMainAppExperience) {
-      setShowInterestFormAfterInvoice(true);
-    }
-    fetchData(); // Refresh the data
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: 'GHS',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   };
 
-  // Combine all invoices for filtering
-  const getAllInvoices = (): Invoice[] => {
+  const getAllInvoices = useCallback((): Invoice[] => {
     const cryptoInvoices: Invoice[] = paymentLinks.map(link => ({
       id: link.id,
       title: link.title,
@@ -299,6 +299,110 @@ export default function Home() {
     }));
 
     return [...cryptoInvoices, ...mobileInvoices];
+  }, [paymentLinks, mobileMoneyInvoices, getPaymentStatus]);
+
+  const salesAnalytics = useMemo(() => {
+    const records = getAllInvoices();
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 6);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const totals = {
+      today: 0,
+      week: 0,
+      allTime: 0,
+      profit: 0,
+    };
+
+    records.forEach((invoice) => {
+      const createdAt = invoice.createdAt || invoice.paidAt || new Date().toISOString();
+      const timestamp = new Date(createdAt).getTime();
+      if (!Number.isFinite(timestamp)) return;
+
+      const isCompleted = invoice.status === 'Paid' || invoice.paymentMethod === 'mobile_money';
+      if (!isCompleted) return;
+
+      const amount = (() => {
+        const metadata = (invoice as { metadata?: { original_amount?: number; original_currency?: string; selectedItems?: Array<{ id: string; name: string; price: number; costPrice?: number; quantity: number }> } }).metadata;
+        const originalAmount = metadata?.original_amount;
+        if (typeof originalAmount === 'number' && Number.isFinite(originalAmount)) {
+          const currency = metadata?.original_currency || 'GHS';
+          return currency === 'USD' ? originalAmount * 15.5 : originalAmount;
+        }
+
+        const fallbackAmount = Number(invoice.amount || 0);
+        if (!Number.isFinite(fallbackAmount)) return 0;
+        return fallbackAmount;
+      })();
+
+      totals.allTime += amount;
+      if (timestamp >= todayStart.getTime() && timestamp <= todayEnd.getTime()) {
+        totals.today += amount;
+      }
+      if (timestamp >= weekStart.getTime()) {
+        totals.week += amount;
+      }
+
+      const selectedItems = (invoice as { metadata?: { selectedItems?: Array<{ id: string; name: string; price: number; costPrice?: number; quantity: number }> } }).metadata?.selectedItems;
+      if (Array.isArray(selectedItems) && brand?.inventory?.enabled) {
+        selectedItems.forEach((item) => {
+          const inventoryItem = brand.inventory?.items?.find((inventoryEntry) => inventoryEntry.id === item.id);
+          const costPrice = inventoryItem?.costPrice ?? item.costPrice ?? 0;
+          const quantity = Number(item.quantity || 0);
+          const revenue = Number(item.price || 0) * quantity;
+          const cost = costPrice * quantity;
+          totals.profit += revenue - cost;
+        });
+      }
+    });
+
+    return totals;
+  }, [brand?.inventory?.enabled, brand?.inventory?.items, getAllInvoices]);
+
+  const salesByDay = useMemo(() => {
+    const records = getAllInvoices();
+    const grouped = new Map<string, { dateKey: string; label: string; total: number; count: number }>();
+
+    records.forEach((invoice) => {
+      const createdAt = invoice.createdAt || invoice.paidAt || "";
+      const timestamp = new Date(createdAt).getTime();
+      if (!Number.isFinite(timestamp)) return;
+
+      const isCompleted = invoice.status === "Paid" || invoice.paymentMethod === "mobile_money";
+      if (!isCompleted) return;
+
+      const dayKey = new Date(timestamp).toISOString().slice(0, 10);
+      const existing = grouped.get(dayKey) || {
+        dateKey: dayKey,
+        label: new Date(timestamp).toLocaleDateString("en-GH", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
+        total: 0,
+        count: 0,
+      };
+
+      existing.total += getInvoiceAmount(invoice);
+      existing.count += 1;
+      grouped.set(dayKey, existing);
+    });
+
+    return Array.from(grouped.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  }, [getAllInvoices]);
+
+  const handleInvoiceCreated = () => {
+    setIsModalOpen(false);
+    if (isMainAppExperience) {
+      setShowInterestFormAfterInvoice(true);
+    }
+    void fetchData();
+    void fetchMobileMoneyInvoices();
   };
 
   // Apply filters and sorting
@@ -317,6 +421,14 @@ export default function Home() {
       amountRange: { min: "", max: "" },
       customer: "",
     });
+  };
+
+  const openInvoiceDetails = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+  };
+
+  const closeInvoiceDetails = () => {
+    setSelectedInvoice(null);
   };
 
   if (!account) {
@@ -1032,47 +1144,100 @@ export default function Home() {
         <div className="space-y-4 md:space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-            <Card>
-              <CardContent className="px-3 md:px-6 py-3 md:py-4">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Total Sales</p>
-                    <p className="text-2xl md:text-3xl font-bold">{paymentLinks.length + mobileMoneyInvoices.length}</p>
-                  </div>
-                  <FileText className="h-6 md:h-8 w-6 md:w-8 text-muted-foreground flex-shrink-0" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="px-3 md:px-6 py-3 md:py-4">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Completed Sales</p>
-                    <p className="text-2xl md:text-3xl font-bold text-green-600">
-                      {paymentLinks.filter(link => getPaymentStatus(link.id) === 'Paid').length + mobileMoneyInvoices.length}
-                    </p>
-                  </div>
-                  <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-green-600/20 border border-green-600/30 flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 md:h-4 w-3 md:w-4 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="px-3 md:px-6 py-3 md:py-4">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending Sales</p>
-                    <p className="text-2xl md:text-3xl font-bold">
-                      {paymentLinks.filter(link => getPaymentStatus(link.id) === 'Unpaid').length}
-                    </p>
-                  </div>
-                  <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                    <Clock className="h-3 md:h-4 w-3 md:w-4 text-muted-foreground" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {salesDashboardMode ? (
+              <>
+                <Card>
+                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Today (GHS)</p>
+                        <p className="text-xl md:text-2xl font-bold">{formatCurrency(salesAnalytics.today)}</p>
+                      </div>
+                      <FileText className="h-6 md:h-8 w-6 md:w-8 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">This Week (GHS)</p>
+                        <p className="text-xl md:text-2xl font-bold">{formatCurrency(salesAnalytics.week)}</p>
+                      </div>
+                      <TrendingUp className="h-6 md:h-8 w-6 md:w-8 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">All Time (GHS)</p>
+                        <p className="text-xl md:text-2xl font-bold">{formatCurrency(salesAnalytics.allTime)}</p>
+                      </div>
+                      <Check className="h-6 md:h-8 w-6 md:w-8 text-green-600 flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Profit (GHS)</p>
+                        <p className="text-xl md:text-2xl font-bold text-green-600">{formatCurrency(salesAnalytics.profit)}</p>
+                      </div>
+                      <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-green-600/20 border border-green-600/30 flex items-center justify-center flex-shrink-0">
+                        <TrendingUp className="h-3 md:h-4 w-3 md:w-4 text-green-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
+                <Card>
+                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Total Sales</p>
+                        <p className="text-2xl md:text-3xl font-bold">{paymentLinks.length + mobileMoneyInvoices.length}</p>
+                      </div>
+                      <FileText className="h-6 md:h-8 w-6 md:w-8 text-muted-foreground flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Completed Sales</p>
+                        <p className="text-2xl md:text-3xl font-bold text-green-600">
+                          {paymentLinks.filter(link => getPaymentStatus(link.id) === 'Paid').length + mobileMoneyInvoices.length}
+                        </p>
+                      </div>
+                      <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-green-600/20 border border-green-600/30 flex items-center justify-center flex-shrink-0">
+                        <Check className="h-3 md:h-4 w-3 md:w-4 text-green-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Pending Sales</p>
+                        <p className="text-2xl md:text-3xl font-bold">
+                          {paymentLinks.filter(link => getPaymentStatus(link.id) === 'Unpaid').length}
+                        </p>
+                      </div>
+                      <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                        <Clock className="h-3 md:h-4 w-3 md:w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
             {salesDashboardMode && (
               <Card className="cursor-pointer hover:border-primary/50 transition-colors">
                 <CardContent className="px-3 md:px-6 py-3 md:py-4">
@@ -1101,6 +1266,33 @@ export default function Home() {
               </Card>
             )}
           </div>
+
+          {salesDashboardMode && (
+            <Card className="shadow-lg">
+              <CardHeader className="pb-3 md:pb-4">
+                <CardTitle className="text-lg md:text-xl font-semibold">Sales by Day</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  {salesByDay.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No completed sales recorded yet.</p>
+                  ) : (
+                    salesByDay.map((day) => (
+                      <div key={day.dateKey} className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-3 py-3">
+                        <div>
+                          <p className="font-medium">{day.label}</p>
+                          <p className="text-xs text-muted-foreground">{day.count} sale{day.count === 1 ? "" : "s"}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">{formatCurrency(day.total)}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Advanced Filter */}
           <Card className="shadow-lg">
@@ -1187,7 +1379,9 @@ export default function Home() {
                           key={invoice.id}
                           className="cursor-pointer hover:bg-muted/50 transition-colors border-border/50"
                           onClick={() => {
-                            if (invoice.paymentMethod === "mobile_money") {
+                            if (salesDashboardMode) {
+                              openInvoiceDetails(invoice);
+                            } else if (invoice.paymentMethod === "mobile_money") {
                               window.open(`/invoice/${invoice.id}`, '_blank');
                             } else {
                               window.open(`/${invoice.id}`, '_blank');
@@ -1243,22 +1437,24 @@ export default function Home() {
                             {formatDate(invoice.createdAt)}
                           </TableCell>
                           <TableCell className="py-3 md:py-4">
-                            {invoice.paymentMethod === "mobile_money" ? (
-                              <InvoicePDFGenerator invoice={invoice as unknown as MobileMoneyInvoice} />
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  alert('PDF generation for crypto payments coming soon!');
-                                }}
-                                className="text-xs"
-                              >
-                                <FileText className="h-3 w-3 mr-1" />
-                                <span className="hidden sm:inline">PDF</span>
-                              </Button>
-                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (salesDashboardMode) {
+                                  openInvoiceDetails(invoice);
+                                } else if (invoice.paymentMethod === "mobile_money") {
+                                  window.open(`/invoice/${invoice.id}`, '_blank');
+                                } else {
+                                  window.open(`/${invoice.id}`, '_blank');
+                                }
+                              }}
+                              className="text-xs"
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              <span className="hidden sm:inline">{salesDashboardMode ? "View" : "Open"}</span>
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -1277,6 +1473,82 @@ export default function Home() {
         onOpenChange={setInventoryDialogOpen}
         inventory={brand?.inventory || { items: [] }}
       />
+
+      <Dialog open={Boolean(selectedInvoice)} onOpenChange={(open) => !open && closeInvoiceDetails()}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Sale Details</DialogTitle>
+            <DialogDescription>
+              {selectedInvoice?.title || "Details for the recorded sale"}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border/50 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Customer</p>
+                  <p className="mt-1 font-medium">{selectedInvoice.metadata?.customer_name || selectedInvoice.title}</p>
+                  {selectedInvoice.metadata?.phone_number && (
+                    <p className="text-sm text-muted-foreground">{selectedInvoice.metadata.phone_number}</p>
+                  )}
+                </div>
+                <div className="rounded-lg border border-border/50 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Amount</p>
+                  <p className="mt-1 font-semibold">{formatCurrency(getInvoiceAmount(selectedInvoice))}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedInvoice.paymentMethod === "mobile_money"
+                      ? `${selectedInvoice.metadata?.original_amount ?? 0} ${selectedInvoice.metadata?.original_currency || "GHS"}`
+                      : `${selectedInvoice.amount} ${selectedInvoice.destinationToken?.symbol || "token"}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border/50 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Method</p>
+                  <p className="mt-1 font-medium">{selectedInvoice.paymentMethod === "mobile_money" ? "Mobile Money" : "Crypto"}</p>
+                </div>
+                <div className="rounded-lg border border-border/50 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
+                  <p className="mt-1 font-medium">{selectedInvoice.status}</p>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border/50 p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Recorded On</p>
+                <p className="mt-1 font-medium">{formatDate(selectedInvoice.createdAt)}</p>
+                {selectedInvoice.reference && (
+                  <p className="mt-1 text-sm text-muted-foreground">Reference: {selectedInvoice.reference}</p>
+                )}
+              </div>
+
+              {(selectedInvoice.metadata as { selectedItems?: Array<{ id: string; name: string; price: number; costPrice?: number; quantity: number }> } | undefined)?.selectedItems?.length ? (
+                <div className="rounded-lg border border-border/50 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Recorded Items</p>
+                  <div className="mt-2 space-y-2">
+                    {(selectedInvoice.metadata as { selectedItems?: Array<{ id: string; name: string; price: number; costPrice?: number; quantity: number }> } | undefined)?.selectedItems?.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2">
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                        </div>
+                        <p className="font-medium">{formatCurrency(item.price * item.quantity)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedInvoice.description && (
+                <div className="rounded-lg border border-border/50 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Description</p>
+                  <p className="mt-1 text-sm">{selectedInvoice.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

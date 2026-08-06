@@ -55,6 +55,7 @@ const formSchema = z.object({
     id: z.string(),
     name: z.string(),
     price: z.number(),
+    costPrice: z.number().optional(),
     quantity: z.number().min(0),
   })).default([]),
 });
@@ -66,6 +67,13 @@ function paymentMethodsForBrand(brand: Brand | undefined) {
     !!brand?.payment?.cryptoEnabled && !!brand?.payment?.receiver;
   const cash = !!brand?.payment?.cashEnabled;
   return { mobileMoney, crypto, cash };
+}
+
+function getInventoryItemEffectivePrice(item: InventoryItem | undefined, quantity: number) {
+  if (!item) return 0;
+  if (quantity === 0.5 && typeof item.halfPrice === 'number') return item.halfPrice;
+  if (quantity === 0.25 && typeof item.quarterPrice === 'number') return item.quarterPrice;
+  return item.price;
 }
 
 type FormValues = z.infer<typeof formSchema>;
@@ -172,9 +180,11 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
     
     if (itemIndex >= 0) {
       const updatedItems = [...currentItems];
+      const effectivePrice = getInventoryItemEffectivePrice(inventoryItem, normalized);
       updatedItems[itemIndex] = {
         ...updatedItems[itemIndex],
-        quantity: normalized >= minQty || normalized === 0 ? normalized : minQty
+        quantity: normalized >= minQty || normalized === 0 ? normalized : minQty,
+        price: effectivePrice,
       };
       form.setValue("selectedItems", updatedItems);
     }
@@ -200,7 +210,8 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
         {
           id: item.id,
           name: item.name,
-          price: item.price,
+          price: getInventoryItemEffectivePrice(item, 1),
+          costPrice: item.costPrice ?? 0,
           quantity: 1
         }
       ]);
@@ -323,6 +334,13 @@ export function PaymentForm({ onSuccess }: PaymentFormProps = {}) {
             companySlug: slug,
             skipPayment: shouldSkipPayment,
             paymentMethod: isCash ? 'cash' : 'mobile_money',
+            selectedItems: values.selectedItems.map((item) => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              costPrice: item.costPrice ?? 0,
+              quantity: item.quantity,
+            })),
           }),
         });
 

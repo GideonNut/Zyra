@@ -31,6 +31,13 @@ export interface Invoice {
     phone_number?: string;
     original_amount: number;
     original_currency: string;
+    selectedItems?: Array<{
+      id: string;
+      name: string;
+      price: number;
+      costPrice?: number;
+      quantity: number;
+    }>;
   };
 }
 

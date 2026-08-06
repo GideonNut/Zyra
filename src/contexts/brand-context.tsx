@@ -8,6 +8,9 @@ export interface InventoryItem {
   name: string;
   description?: string;
   price: number;
+  costPrice?: number;
+  halfPrice?: number;
+  quarterPrice?: number;
   quantity: number;
   sku?: string;
   imageUrl?: string;

@@ -17,6 +17,9 @@ interface InventoryItem {
   name: string;
   description?: string;
   price: number;
+  costPrice?: number;
+  halfPrice?: number;
+  quarterPrice?: number;
   quantity: number;
   sku?: string;
   imageUrl?: string;
@@ -212,6 +215,12 @@ export default function BrandEditorPage() {
         const priceIndex = headers.findIndex(h => 
           h.includes("price") || h.includes("cost") || h.includes("amount")
         );
+        const halfPriceIndex = headers.findIndex(h =>
+          h.includes("half") && h.includes("price")
+        );
+        const quarterPriceIndex = headers.findIndex(h =>
+          h.includes("quarter") && h.includes("price")
+        );
         const quantityIndex = headers.findIndex(h => 
           h.includes("quantity") || h.includes("qty") || h.includes("stock")
         );
@@ -243,6 +252,12 @@ export default function BrandEditorPage() {
           if (!name) continue;
 
           const price = parseFloat(priceStr.replace(/[^0-9.-]/g, "")) || 0;
+          const halfPrice = halfPriceIndex !== -1
+            ? parseFloat(String(row[halfPriceIndex] || "0").replace(/[^0-9.-]/g, "")) || 0
+            : undefined;
+          const quarterPrice = quarterPriceIndex !== -1
+            ? parseFloat(String(row[quarterPriceIndex] || "0").replace(/[^0-9.-]/g, "")) || 0
+            : undefined;
           const quantity = quantityIndex !== -1 
             ? parseInt(String(row[quantityIndex] || "0").trim()) || 0 
             : 0;
@@ -263,6 +278,9 @@ export default function BrandEditorPage() {
             id: `item-${Date.now()}-${i}`,
             name,
             price,
+            costPrice: 0,
+            halfPrice: halfPrice ?? undefined,
+            quarterPrice: quarterPrice ?? undefined,
             quantity,
             description: description || undefined,
             sku: sku || undefined,
@@ -409,6 +427,7 @@ export default function BrandEditorPage() {
                               id: `item-${Date.now()}`,
                               name: "",
                               price: 0,
+                              costPrice: 0,
                               quantity: 0,
                             };
                             setBrand({
@@ -460,6 +479,9 @@ export default function BrandEditorPage() {
                           <tr className="text-left text-muted-foreground">
                             <th className="p-2 font-medium min-w-[140px]">Name</th>
                             <th className="p-2 font-medium w-24">Price ₵</th>
+                            <th className="p-2 font-medium w-24">½ ₵</th>
+                            <th className="p-2 font-medium w-24">¼ ₵</th>
+                            <th className="p-2 font-medium w-24">Cost ₵</th>
                             <th className="p-2 font-medium w-20">Stock</th>
                             <th className="p-2 font-medium w-16 text-center" title="Sell by half and quarter">½/¼</th>
                             <th className="p-2 font-medium min-w-[88px]">SKU</th>
@@ -499,6 +521,51 @@ export default function BrandEditorPage() {
                                   onChange={(price) => {
                                     const items = [...(brand.inventory?.items || [])];
                                     items[index] = { ...item, price };
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
+                                  }}
+                                />
+                              </td>
+                              <td className="p-2">
+                                <EmptyZeroNumberInput
+                                  id={`half-price-${item.id}`}
+                                  value={item.halfPrice ?? 0}
+                                  step="0.01"
+                                  min="0"
+                                  className="w-full px-2 py-1.5 rounded border border-border bg-background"
+                                  aria-label="Item half price in Ghana cedis"
+                                  onChange={(halfPrice) => {
+                                    const items = [...(brand.inventory?.items || [])];
+                                    items[index] = { ...item, halfPrice };
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
+                                  }}
+                                />
+                              </td>
+                              <td className="p-2">
+                                <EmptyZeroNumberInput
+                                  id={`quarter-price-${item.id}`}
+                                  value={item.quarterPrice ?? 0}
+                                  step="0.01"
+                                  min="0"
+                                  className="w-full px-2 py-1.5 rounded border border-border bg-background"
+                                  aria-label="Item quarter price in Ghana cedis"
+                                  onChange={(quarterPrice) => {
+                                    const items = [...(brand.inventory?.items || [])];
+                                    items[index] = { ...item, quarterPrice };
+                                    setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
+                                  }}
+                                />
+                              </td>
+                              <td className="p-2">
+                                <EmptyZeroNumberInput
+                                  id={`cost-price-${item.id}`}
+                                  value={item.costPrice ?? 0}
+                                  step="0.01"
+                                  min="0"
+                                  className="w-full px-2 py-1.5 rounded border border-border bg-background"
+                                  aria-label="Item cost price in Ghana cedis"
+                                  onChange={(costPrice) => {
+                                    const items = [...(brand.inventory?.items || [])];
+                                    items[index] = { ...item, costPrice };
                                     setBrand({ ...brand, inventory: { ...brand.inventory!, items } });
                                   }}
                                 />

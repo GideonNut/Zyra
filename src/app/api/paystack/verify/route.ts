@@ -88,8 +88,9 @@ export async function POST(request: NextRequest) {
             paystack_transaction_id: data.data.id,
             customer_name: data.data.metadata?.customer_name,
             phone_number: data.data.metadata?.phone_number,
-            original_amount: data.data.amount,
+            original_amount: data.data.amount / 100,
             original_currency: data.data.currency,
+            selectedItems: Array.isArray(data.data.metadata?.selectedItems) ? data.data.metadata.selectedItems : [],
           }
         };
 

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThirdwebProvider } from "thirdweb/react";
+import { ThirdwebProvider, AutoConnect } from "thirdweb/react";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { BrandProvider } from "@/contexts/brand-context";
 import { BrandHeadClient } from "@/components/brand-head-client";
+import { client } from "@/lib/constants";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
         <BrandProvider>
           <ThemeProvider>
             <ThirdwebProvider>
+              <AutoConnect client={client} />
               <BrandHeadClient />
               {children}
             </ThirdwebProvider>
