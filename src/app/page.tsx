@@ -4,7 +4,7 @@ import { ConnectButton } from "@/components/connect-button";
 import { DisconnectButton } from "@/components/disconnect-button";
 import { PaymentForm } from "@/components/payment-form";
 import { useActiveAccount } from "thirdweb/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Bridge } from "thirdweb";
 import { client } from "@/lib/constants";
 import {
@@ -365,37 +365,47 @@ export default function Home() {
     return totals;
   }, [brand?.inventory?.enabled, brand?.inventory?.items, getAllInvoices]);
 
-  const salesByDay = useMemo(() => {
-    const records = getAllInvoices();
-    const grouped = new Map<string, { dateKey: string; label: string; total: number; count: number }>();
+  const filteredAndSortedInvoices = sortInvoices(
+    filterInvoices(getAllInvoices(), filters),
+    sortBy,
+    sortOrder
+  );
 
-    records.forEach((invoice) => {
+  const groupedInvoicesByDay = useMemo(() => {
+    if (!salesDashboardMode) {
+      return [{
+        dateKey: "",
+        label: "",
+        invoices: filteredAndSortedInvoices,
+      }];
+    }
+
+    const grouped = new Map<string, Invoice[]>();
+
+    filteredAndSortedInvoices.forEach((invoice) => {
       const createdAt = invoice.createdAt || invoice.paidAt || "";
       const timestamp = new Date(createdAt).getTime();
       if (!Number.isFinite(timestamp)) return;
 
-      const isCompleted = invoice.status === "Paid" || invoice.paymentMethod === "mobile_money";
-      if (!isCompleted) return;
-
       const dayKey = new Date(timestamp).toISOString().slice(0, 10);
-      const existing = grouped.get(dayKey) || {
-        dateKey: dayKey,
-        label: new Date(timestamp).toLocaleDateString("en-GH", {
+      const existing = grouped.get(dayKey) || [];
+      existing.push(invoice);
+      grouped.set(dayKey, existing);
+    });
+
+    return Array.from(grouped.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([dateKey, invoices]) => ({
+        dateKey,
+        label: new Date(dateKey).toLocaleDateString("en-GH", {
+          weekday: "short",
           day: "numeric",
           month: "short",
           year: "numeric",
         }),
-        total: 0,
-        count: 0,
-      };
-
-      existing.total += getInvoiceAmount(invoice);
-      existing.count += 1;
-      grouped.set(dayKey, existing);
-    });
-
-    return Array.from(grouped.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
-  }, [getAllInvoices]);
+        invoices,
+      }));
+  }, [filteredAndSortedInvoices, salesDashboardMode]);
 
   const handleInvoiceCreated = () => {
     setIsModalOpen(false);
@@ -405,13 +415,6 @@ export default function Home() {
     void fetchData();
     void fetchMobileMoneyInvoices();
   };
-
-  // Apply filters and sorting
-  const filteredAndSortedInvoices = sortInvoices(
-    filterInvoices(getAllInvoices(), filters),
-    sortBy,
-    sortOrder
-  );
 
   const clearFilters = () => {
     setFilters({
@@ -1302,33 +1305,6 @@ export default function Home() {
             )}
           </div>
 
-          {salesDashboardMode && (
-            <Card className="shadow-lg">
-              <CardHeader className="pb-3 md:pb-4">
-                <CardTitle className="text-lg md:text-xl font-semibold">Sales by Day</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  {salesByDay.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No completed sales recorded yet.</p>
-                  ) : (
-                    salesByDay.map((day) => (
-                      <div key={day.dateKey} className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 px-3 py-3">
-                        <div>
-                          <p className="font-medium">{day.label}</p>
-                          <p className="text-xs text-muted-foreground">{day.count} sale{day.count === 1 ? "" : "s"}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">{formatCurrency(day.total)}</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Advanced Filter */}
           <Card className="shadow-lg">
             <CardHeader className="pb-3 md:pb-4">
@@ -1409,106 +1385,117 @@ export default function Home() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredAndSortedInvoices.map((invoice) => (
-                        <TableRow
-                          key={invoice.id}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors border-border/50"
-                          onClick={() => {
-                            if (salesDashboardMode) {
-                              openInvoiceDetails(invoice);
-                            } else if (invoice.paymentMethod === "mobile_money") {
-                              window.open(`/invoice/${invoice.id}`, '_blank');
-                            } else {
-                              window.open(`/${invoice.id}`, '_blank');
-                            }
-                          }}
-                        >
-                          <TableCell className="font-medium py-3 md:py-4 text-xs md:text-sm">
-                            <div className="truncate">
-                              {invoice.paymentMethod === "mobile_money" 
-                                ? invoice.metadata?.customer_name || invoice.title
-                                : invoice.title
-                              }
-                            </div>
-                            <div className="md:hidden text-xs text-muted-foreground mt-1">
-                              {invoice.paymentMethod === "mobile_money" 
-                                ? `${invoice.metadata?.original_amount} ${invoice.metadata?.original_currency}`
-                                : (invoice.priceUsd 
-                                  ? formatUsdAmount(invoice.amount, invoice.destinationToken?.decimals, invoice.priceUsd) ||
-                                    `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
-                                  : `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
-                                )
-                              }
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-3 md:py-4 text-xs md:text-sm hidden sm:table-cell font-mono font-medium">
-                            {invoice.paymentMethod === "mobile_money" 
-                              ? `${invoice.metadata?.original_amount} ${invoice.metadata?.original_currency}`
-                              : (invoice.priceUsd 
-                                ? formatUsdAmount(invoice.amount, invoice.destinationToken?.decimals, invoice.priceUsd) ||
-                                  `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
-                                : `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
-                              )
-                            }
-                          </TableCell>
-                          <TableCell className="py-3 md:py-4 hidden md:table-cell">
-                            <Badge variant="outline" className="text-xs whitespace-nowrap">
-                              {invoice.paymentMethod === "mobile_money" 
-                                ? "Mobile Money"
-                                : `Crypto`
-                              }
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="py-3 md:py-4">
-                            <Badge
-                              variant={invoice.status === 'Paid' ? 'default' : 'secondary'}
-                              className={`text-xs whitespace-nowrap ${invoice.status === 'Paid' ? 'bg-green-600/20 hover:bg-green-600/20 border border-green-600 text-green-600' : ''}`}
+                      groupedInvoicesByDay.map((group) => (
+                        <Fragment key={group.dateKey || "all"}>
+                          {salesDashboardMode && group.dateKey ? (
+                            <TableRow className="bg-muted/20 hover:bg-muted/20 border-border/50">
+                              <TableCell colSpan={6} className="py-2 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                {group.label}
+                              </TableCell>
+                            </TableRow>
+                          ) : null}
+                          {group.invoices.map((invoice) => (
+                            <TableRow
+                              key={invoice.id}
+                              className="cursor-pointer hover:bg-muted/50 transition-colors border-border/50"
+                              onClick={() => {
+                                if (salesDashboardMode) {
+                                  openInvoiceDetails(invoice);
+                                } else if (invoice.paymentMethod === "mobile_money") {
+                                  window.open(`/invoice/${invoice.id}`, '_blank');
+                                } else {
+                                  window.open(`/${invoice.id}`, '_blank');
+                                }
+                              }}
                             >
-                              {invoice.status === 'Paid' && <Check className="h-2 md:h-3 w-2 md:w-3 mr-1" />}
-                              {invoice.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="py-3 md:py-4 text-muted-foreground text-xs md:text-sm hidden sm:table-cell">
-                            {formatDate(invoice.createdAt)}
-                          </TableCell>
-                          <TableCell className="py-3 md:py-4">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (salesDashboardMode) {
-                                    openInvoiceDetails(invoice);
-                                  } else if (invoice.paymentMethod === "mobile_money") {
-                                    window.open(`/invoice/${invoice.id}`, '_blank');
-                                  } else {
-                                    window.open(`/${invoice.id}`, '_blank');
+                              <TableCell className="font-medium py-3 md:py-4 text-xs md:text-sm">
+                                <div className="truncate">
+                                  {invoice.paymentMethod === "mobile_money" 
+                                    ? invoice.metadata?.customer_name || invoice.title
+                                    : invoice.title
                                   }
-                                }}
-                                className="text-xs"
-                              >
-                                <Eye className="h-3 w-3 mr-1" />
-                                <span className="hidden sm:inline">{salesDashboardMode ? "View" : "Open"}</span>
-                              </Button>
-                              {salesDashboardMode && (
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    void handleDeleteInvoice(invoice);
-                                  }}
-                                  disabled={deletingInvoiceId === invoice.id}
-                                  className="text-xs"
+                                </div>
+                                <div className="md:hidden text-xs text-muted-foreground mt-1">
+                                  {invoice.paymentMethod === "mobile_money" 
+                                    ? `${invoice.metadata?.original_amount} ${invoice.metadata?.original_currency}`
+                                    : (invoice.priceUsd 
+                                      ? formatUsdAmount(invoice.amount, invoice.destinationToken?.decimals, invoice.priceUsd) ||
+                                        `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
+                                      : `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
+                                    )
+                                  }
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3 md:py-4 text-xs md:text-sm hidden sm:table-cell font-mono font-medium">
+                                {invoice.paymentMethod === "mobile_money" 
+                                  ? `${invoice.metadata?.original_amount} ${invoice.metadata?.original_currency}`
+                                  : (invoice.priceUsd 
+                                    ? formatUsdAmount(invoice.amount, invoice.destinationToken?.decimals, invoice.priceUsd) ||
+                                      `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
+                                    : `${formatAmount(invoice.amount, invoice.destinationToken?.decimals)} ${invoice.destinationToken?.symbol}`
+                                  )
+                                }
+                              </TableCell>
+                              <TableCell className="py-3 md:py-4 hidden md:table-cell">
+                                <Badge variant="outline" className="text-xs whitespace-nowrap">
+                                  {invoice.paymentMethod === "mobile_money" 
+                                    ? "Mobile Money"
+                                    : `Crypto`
+                                  }
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="py-3 md:py-4">
+                                <Badge
+                                  variant={invoice.status === 'Paid' ? 'default' : 'secondary'}
+                                  className={`text-xs whitespace-nowrap ${invoice.status === 'Paid' ? 'bg-green-600/20 hover:bg-green-600/20 border border-green-600 text-green-600' : ''}`}
                                 >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  <span className="hidden sm:inline">{deletingInvoiceId === invoice.id ? "Deleting" : "Delete"}</span>
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                                  {invoice.status === 'Paid' && <Check className="h-2 md:h-3 w-2 md:w-3 mr-1" />}
+                                  {invoice.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="py-3 md:py-4 text-muted-foreground text-xs md:text-sm hidden sm:table-cell">
+                                {formatDate(invoice.createdAt)}
+                              </TableCell>
+                              <TableCell className="py-3 md:py-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (salesDashboardMode) {
+                                        openInvoiceDetails(invoice);
+                                      } else if (invoice.paymentMethod === "mobile_money") {
+                                        window.open(`/invoice/${invoice.id}`, '_blank');
+                                      } else {
+                                        window.open(`/${invoice.id}`, '_blank');
+                                      }
+                                    }}
+                                    className="text-xs"
+                                  >
+                                    <Eye className="h-3 w-3 mr-1" />
+                                    <span className="hidden sm:inline">{salesDashboardMode ? "View" : "Open"}</span>
+                                  </Button>
+                                  {salesDashboardMode && (
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        void handleDeleteInvoice(invoice);
+                                      }}
+                                      disabled={deletingInvoiceId === invoice.id}
+                                      className="text-xs"
+                                    >
+                                      <Trash2 className="h-3 w-3 mr-1" />
+                                      <span className="hidden sm:inline">{deletingInvoiceId === invoice.id ? "Deleting" : "Delete"}</span>
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </Fragment>
                       ))
                     )}
                   </TableBody>
