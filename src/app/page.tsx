@@ -365,6 +365,69 @@ export default function Home() {
     return totals;
   }, [brand?.inventory?.enabled, brand?.inventory?.items, getAllInvoices]);
 
+  const profitBreakdown = useMemo(() => {
+    const sales = getAllInvoices().reduce<Array<{
+      id: string;
+      label: string;
+      createdAt: string;
+      revenue: number;
+      cost: number;
+      profit: number;
+      items: Array<{ id: string; name: string; quantity: number; revenue: number; cost: number; profit: number }>;
+    }>>((acc, invoice) => {
+      const isCompleted = invoice.status === 'Paid' || invoice.paymentMethod === 'mobile_money';
+      if (!isCompleted) return acc;
+
+      const selectedItems = (invoice as { metadata?: { selectedItems?: Array<{ id: string; name: string; price: number; costPrice?: number; quantity: number }> } }).metadata?.selectedItems;
+      if (!Array.isArray(selectedItems) || !brand?.inventory?.enabled) return acc;
+
+      const items = selectedItems.reduce<Array<{ id: string; name: string; quantity: number; revenue: number; cost: number; profit: number }>>((itemAcc, item) => {
+        const inventoryItem = brand.inventory?.items?.find((inventoryEntry) => inventoryEntry.id === item.id);
+        const costPrice = inventoryItem?.costPrice ?? item.costPrice ?? 0;
+        const quantity = Number(item.quantity || 0);
+        const revenue = Number(item.price || 0) * quantity;
+        const cost = costPrice * quantity;
+        const profit = revenue - cost;
+
+        if (profit === 0) return itemAcc;
+
+        itemAcc.push({
+          id: `${invoice.id}-${item.id}`,
+          name: item.name || inventoryItem?.name || "Item",
+          quantity,
+          revenue,
+          cost,
+          profit,
+        });
+        return itemAcc;
+      }, []);
+
+      if (items.length === 0) return acc;
+
+      const revenue = items.reduce((sum, item) => sum + item.revenue, 0);
+      const cost = items.reduce((sum, item) => sum + item.cost, 0);
+      const profit = revenue - cost;
+
+      if (profit === 0) return acc;
+
+      acc.push({
+        id: invoice.id,
+        label: invoice.title || `Sale ${invoice.id}`,
+        createdAt: invoice.createdAt || invoice.paidAt || "",
+        revenue,
+        cost,
+        profit,
+        items,
+      });
+      return acc;
+    }, []);
+
+    return {
+      totalProfit: sales.reduce((sum, sale) => sum + sale.profit, 0),
+      sales: sales.sort((a, b) => b.profit - a.profit),
+    };
+  }, [brand?.inventory?.enabled, brand?.inventory?.items, getAllInvoices]);
+
   const filteredAndSortedInvoices = sortInvoices(
     filterInvoices(getAllInvoices(), filters),
     sortBy,
@@ -1217,19 +1280,78 @@ export default function Home() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="px-3 md:px-6 py-3 md:py-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Profit (GHS)</p>
-                        <p className="text-xl md:text-2xl font-bold text-green-600">{formatCurrency(salesAnalytics.profit)}</p>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Card className="cursor-pointer hover:border-primary/50 transition-colors">
+                      <CardContent className="px-3 md:px-6 py-3 md:py-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">Profit (GHS)</p>
+                            <p className="text-xl md:text-2xl font-bold text-green-600">{formatCurrency(salesAnalytics.profit)}</p>
+                          </div>
+                          <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-green-600/20 border border-green-600/30 flex items-center justify-center flex-shrink-0">
+                            <TrendingUp className="h-3 md:h-4 w-3 md:w-4 text-green-600" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Profit Breakdown</DialogTitle>
+                      <DialogDescription>Tap each sale to see the item-level profit behind it.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                      <div className="rounded-lg border border-border/50 bg-muted/30 p-3 md:p-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium text-muted-foreground">Total profit</p>
+                          <p className="text-lg font-semibold text-green-600">{formatCurrency(profitBreakdown.totalProfit)}</p>
+                        </div>
                       </div>
-                      <div className="h-6 md:h-8 w-6 md:w-8 rounded-full bg-green-600/20 border border-green-600/30 flex items-center justify-center flex-shrink-0">
-                        <TrendingUp className="h-3 md:h-4 w-3 md:w-4 text-green-600" />
-                      </div>
+                      {profitBreakdown.sales.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No profit breakdown available yet.</p>
+                      ) : (
+                        <Accordion type="multiple" className="space-y-2">
+                          {profitBreakdown.sales.map((sale) => (
+                            <AccordionItem key={sale.id} value={sale.id} className="rounded-lg border border-border/50 px-3">
+                              <AccordionTrigger className="py-3 text-left">
+                                <div className="flex flex-col items-start gap-1 text-sm">
+                                  <div className="flex w-full items-center justify-between gap-3">
+                                    <span className="font-medium">{sale.label}</span>
+                                    <span className="font-semibold text-green-600">{formatCurrency(sale.profit)}</span>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">
+                                    {sale.createdAt ? new Date(sale.createdAt).toLocaleDateString("en-GH", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    }) : "Unknown date"}
+                                  </span>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="pb-3">
+                                <div className="space-y-2 text-sm">
+                                  {sale.items.map((item) => (
+                                    <div key={item.id} className="flex items-center justify-between gap-3 rounded-md bg-muted/40 px-3 py-2">
+                                      <div>
+                                        <p className="font-medium">{item.name}</p>
+                                        <p className="text-xs text-muted-foreground">Qty {item.quantity}</p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="font-medium text-green-600">{formatCurrency(item.profit)}</p>
+                                        <p className="text-xs text-muted-foreground">Revenue {formatCurrency(item.revenue)} • Cost {formatCurrency(item.cost)}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                  </DialogContent>
+                </Dialog>
               </>
             ) : (
               <>
